@@ -246,8 +246,8 @@
   .kanban-col-head b{font-size:13.5px;}
   .kanban-col-head .kc-count{font-size:11px; color:var(--text-faint); font-weight:700;}
   .kanban-quickadd{display:flex; gap:6px; margin-bottom:10px;}
-  .kanban-quickadd input{flex:1; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:7px 9px; color:var(--text); font-size:13px;}
-  .kanban-quickadd button{background:var(--surface2); border:1px solid var(--border); border-radius:8px; width:30px; color:var(--text-muted); flex:0 0 auto;}
+  .kanban-quickadd input{flex:1; min-width:0; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:7px 9px; color:var(--text); font-size:13px;}
+  .kanban-quickadd button{background:var(--surface2); border:1px solid var(--border); border-radius:8px; width:30px; height:30px; display:flex; align-items:center; justify-content:center; color:var(--text-muted); flex:0 0 30px;}
   .kanban-cards{overflow-y:auto; max-height:60vh;}
   .kcard{background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:9px 10px; margin-bottom:7px; display:flex; gap:8px; align-items:flex-start;}
   .kcard .kctext{font-size:13px; flex:1; word-break:break-word;}
@@ -271,6 +271,7 @@
 
   /* ---- habit month heatmap ---- */
   .habit-stats{font-size:12px; color:var(--habit); font-weight:700; margin-bottom:8px;}
+  .habit-months-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px 10px; margin-top:10px;}
   .heat-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:4px;}
   .heat-cell{aspect-ratio:1; border-radius:6px; border:1.5px solid var(--border); background:transparent;}
   .heat-cell.done{background:var(--habit); border-color:var(--habit);}
@@ -358,7 +359,8 @@ function icon(name, cls=''){
     camera: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="14" r="3.3"/>',
     settings: '<circle cx="12" cy="12" r="3"/><path d="M4 12h2M18 12h2M12 4v2M12 18v2M6.3 6.3l1.4 1.4M16.3 16.3l1.4 1.4M17.7 6.3l-1.4 1.4M7.7 16.3l-1.4 1.4"/>',
     download: '<path d="M12 3v12M7 11l5 5 5-5M5 21h14"/>',
-    upload: '<path d="M12 21V9M7 13l5-5 5 5M5 3h14"/>'
+    upload: '<path d="M12 21V9M7 13l5-5 5 5M5 3h14"/>',
+    edit: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/>'
   };
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${cls}">${paths[name]||''}</svg>`;
 }
@@ -484,10 +486,15 @@ window.addEventListener('online', ()=>{ if(pendingKeys.size) retryAllSaves(); })
 
 function defaultLists(){
   return [
-    { id:'inbox', name:'Входящие', builtin:true },
-    { id:'work', name:'Работа', builtin:true },
-    { id:'home', name:'Дом', builtin:true },
+    { id:'inbox', name:'Входящие', builtin:true, color:'#9077BB' },
+    { id:'work', name:'Работа', builtin:true, color:'#D68A3A' },
+    { id:'home', name:'Дом', builtin:true, color:'#CD7C60' },
   ];
+}
+const LIST_COLOR_PALETTE = ['#9077BB','#D68A3A','#CD7C60','#6FA36A','#4E93B8','#C17998','#8A8F6E','#B8935A'];
+function getListColor(listId){
+  const l = state.lists.find(x=>x.id===listId);
+  return l ? l.color : '#9077BB';
 }
 
 const state = {
@@ -522,7 +529,14 @@ async function loadAll(){
       }));
     }
     // ensure every task has a list field (older tasks predating lists)
-    state.tasks.forEach(task => { if(!task.list) task.list = task.type || 'inbox'; });
+    state.tasks.forEach(task => {
+      if(!task.list) task.list = task.type || 'inbox';
+      if(task.recur === undefined) task.recur = null;
+      (task.subtasks||[]).forEach(s => { if(s.date===undefined) s.date=null; if(!s.tags) s.tags=[]; });
+    });
+    // ensure every list has a color (older lists predating colors)
+    const defaults = defaultLists();
+    state.lists.forEach((l,i) => { if(!l.color) l.color = (defaults.find(d=>d.id===l.id)||{}).color || LIST_COLOR_PALETTE[i % LIST_COLOR_PALETTE.length]; });
   }
   if(h){ state.habits=h.habits||[]; state.habitEntries=h.habitEntries||{}; }
   if(s){ state.exercises=s.exercises||[]; state.sportLogs=s.sportLogs||{}; state.workouts=s.workouts||[]; state.measurements=s.measurements||[]; }
@@ -585,9 +599,10 @@ $('#modalBackdrop').addEventListener('click', e => { if(e.target.id==='modalBack
 /* ---- Task modal (create/edit) ---- */
 function openTaskModal({ type, date, list, task=null }){
   const draft = task ? JSON.parse(JSON.stringify(task)) : {
-    id: uid(), type: type||null, list: list || type || 'inbox', text:'', date: date || null, tags:[], subtasks:[], done:false, createdAt: Date.now()
+    id: uid(), type: type||null, list: list || type || 'inbox', text:'', date: date || null, tags:[], subtasks:[], done:false, createdAt: Date.now(), recur: null
   };
-  const accent = draft.type==='work' ? 'var(--work)' : draft.type==='home' ? 'var(--home)' : 'var(--goal)';
+  if(draft.recur === undefined) draft.recur = null;
+  const accent = getListColor(draft.list);
   const html = `
     <div class="modal-title">${task ? 'Задача' : 'Новая задача'}</div>
     <div class="field"><label>Текст</label><input type="text" id="mf-text" value="${escapeHtml(draft.text)}" placeholder="Что нужно сделать"></div>
@@ -599,7 +614,20 @@ function openTaskModal({ type, date, list, task=null }){
     <div class="field"><label>Дата (необязательно)</label><input type="date" id="mf-date" value="${draft.date||''}"></div>
     <div class="field"><label>Теги (через запятую)</label><input type="text" id="mf-tags" value="${draft.tags.join(', ')}" placeholder="напр. CaseGuru, срочно"></div>
     <div class="field">
-      <label>Подзадачи</label>
+      <label>Повтор</label>
+      <div class="row-gap">
+        <select id="mf-recur-freq" style="flex:1">
+          <option value="">Не повторять</option>
+          <option value="daily" ${draft.recur&&draft.recur.freq==='daily'?'selected':''}>По дням</option>
+          <option value="weekly" ${draft.recur&&draft.recur.freq==='weekly'?'selected':''}>По неделям</option>
+          <option value="monthly" ${draft.recur&&draft.recur.freq==='monthly'?'selected':''}>По месяцам</option>
+        </select>
+        <input type="number" id="mf-recur-interval" min="1" value="${draft.recur?draft.recur.interval:1}" style="width:64px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:8px; color:var(--text);">
+      </div>
+      <p class="hint">Например «По неделям» + 2 = раз в две недели. При отметке «выполнено» дата новой задачи проставится автоматически.</p>
+    </div>
+    <div class="field">
+      <label>Подзадачи (можно с датой и тегами)</label>
       <div id="mf-subtasks"></div>
       <div class="quickadd"><input type="text" id="mf-sub-input" placeholder="Добавить подзадачу"><button id="mf-sub-add" type="button">${icon('plus')}</button></div>
     </div>
@@ -611,16 +639,24 @@ function openTaskModal({ type, date, list, task=null }){
   openModal(html, root => {
     const renderSubs = () => {
       $('#mf-subtasks', root).innerHTML = draft.subtasks.map(s => `
-        <div class="subtask-row" data-id="${s.id}">
+        <div class="subtask-row" data-id="${s.id}" style="flex-wrap:wrap; align-items:center;">
           <button class="checkbox ${s.done?'done '+draft.type:''}" data-sub-toggle="${s.id}">${icon('check')}</button>
-          <input type="text" value="${escapeHtml(s.text)}" data-sub-text="${s.id}">
+          <input type="text" value="${escapeHtml(s.text)}" data-sub-text="${s.id}" style="flex:1; min-width:100px;">
           <button class="delbtn" data-sub-del="${s.id}">${icon('x')}</button>
+          <input type="date" value="${s.date||''}" data-sub-date="${s.id}" style="width:132px; margin-left:28px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:5px 8px; color:var(--text); font-size:12.5px;">
+          <input type="text" value="${(s.tags||[]).join(', ')}" data-sub-tags="${s.id}" placeholder="теги" style="flex:1; min-width:80px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:5px 8px; color:var(--text); font-size:12.5px;">
         </div>`).join('');
       $$('[data-sub-toggle]', root).forEach(b => b.addEventListener('click', ()=>{
         const st = draft.subtasks.find(s=>s.id===b.dataset.subToggle); st.done=!st.done; renderSubs();
       }));
       $$('[data-sub-text]', root).forEach(inp => inp.addEventListener('input', ()=>{
         draft.subtasks.find(s=>s.id===inp.dataset.subText).text = inp.value;
+      }));
+      $$('[data-sub-date]', root).forEach(inp => inp.addEventListener('change', ()=>{
+        draft.subtasks.find(s=>s.id===inp.dataset.subDate).date = inp.value || null;
+      }));
+      $$('[data-sub-tags]', root).forEach(inp => inp.addEventListener('input', ()=>{
+        draft.subtasks.find(s=>s.id===inp.dataset.subTags).tags = inp.value.split(',').map(x=>x.trim()).filter(Boolean);
       }));
       $$('[data-sub-del]', root).forEach(b => b.addEventListener('click', ()=>{
         draft.subtasks = draft.subtasks.filter(s=>s.id!==b.dataset.subDel); renderSubs();
@@ -630,7 +666,7 @@ function openTaskModal({ type, date, list, task=null }){
     $('#mf-sub-add', root).addEventListener('click', ()=>{
       const inp = $('#mf-sub-input', root);
       if(!inp.value.trim()) return;
-      draft.subtasks.push({ id: uid(), text: inp.value.trim(), done:false });
+      draft.subtasks.push({ id: uid(), text: inp.value.trim(), done:false, date:null, tags:[] });
       inp.value=''; renderSubs();
     });
     $('#mf-save', root).addEventListener('click', ()=>{
@@ -640,6 +676,8 @@ function openTaskModal({ type, date, list, task=null }){
       draft.type = (draft.list==='work'||draft.list==='home') ? draft.list : null;
       draft.date = $('#mf-date', root).value || null;
       draft.tags = $('#mf-tags', root).value.split(',').map(s=>s.trim()).filter(Boolean);
+      const freq = $('#mf-recur-freq', root).value;
+      draft.recur = freq ? { freq, interval: Math.max(1, Number($('#mf-recur-interval', root).value)||1) } : null;
       const idx = state.tasks.findIndex(t=>t.id===draft.id);
       if(idx>=0) state.tasks[idx]=draft; else state.tasks.push(draft);
       persistTasks(); closeModal(); renderActive();
@@ -652,7 +690,53 @@ function openTaskModal({ type, date, list, task=null }){
     }
   });
 }
+function nextRecurDate(iso, recur){
+  const d = parseISO(iso||todayISO());
+  if(recur.freq==='daily') d.setDate(d.getDate()+recur.interval);
+  else if(recur.freq==='weekly') d.setDate(d.getDate()+7*recur.interval);
+  else if(recur.freq==='monthly') d.setMonth(d.getMonth()+recur.interval);
+  return isoDate(d);
+}
+function toggleTaskDone(tsk){
+  tsk.done = !tsk.done;
+  if(tsk.done && tsk.recur){
+    const clone = JSON.parse(JSON.stringify(tsk));
+    clone.id = uid();
+    clone.done = false;
+    clone.date = nextRecurDate(tsk.date, tsk.recur);
+    clone.createdAt = Date.now();
+    clone.subtasks = (clone.subtasks||[]).map(s => ({ ...s, done:false }));
+    state.tasks.push(clone);
+  }
+}
 function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function openListEditModal(listId){
+  const l = state.lists.find(x=>x.id===listId);
+  const html = `
+    <div class="modal-title">Список</div>
+    <div class="field"><label>Название</label><input type="text" id="le-name" value="${escapeHtml(l.name)}"></div>
+    <div class="field"><label>Цвет (для точек в календаре)</label>
+      <div class="row-gap" style="align-items:center;">
+        <input type="color" id="le-color" value="${l.color}" style="width:48px; height:38px; border:1px solid var(--border); border-radius:8px; padding:2px; background:var(--surface2);">
+        <div class="row-gap">
+          ${LIST_COLOR_PALETTE.map(c=>`<button type="button" data-swatch="${c}" style="width:26px;height:26px;border-radius:50%;background:${c};border:2px solid ${c===l.color?'var(--text)':'transparent'};"></button>`).join('')}
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" id="le-save" style="background:${l.color}">Сохранить</button>
+    </div>
+  `;
+  openModal(html, root => {
+    $$('[data-swatch]', root).forEach(b => b.addEventListener('click', ()=>{ $('#le-color', root).value = b.dataset.swatch; }));
+    $('#le-save', root).addEventListener('click', ()=>{
+      const name = $('#le-name', root).value.trim();
+      if(name) l.name = name;
+      l.color = $('#le-color', root).value;
+      persistTasks(); closeModal(); renderActive();
+    });
+  });
+}
 function renamePrompt(current){
   const val = prompt('Новое название', current);
   return (val && val.trim()) ? val.trim() : null;
@@ -661,9 +745,10 @@ function renamePrompt(current){
 /* ============================= TASK ROW RENDER ============================= */
 function taskRowHTML(t){
   const subDone = t.subtasks.filter(s=>s.done).length;
+  const accent = getListColor(t.list);
   return `
   <div class="taskrow">
-    <button class="checkbox ${t.done?'done '+t.type:''}" data-toggle="${t.id}">${icon('check')}</button>
+    <button class="checkbox ${t.done?'done':''}" style="${t.done?`background:${accent}; border-color:${accent}; color:#fff;`:''}" data-toggle="${t.id}">${icon('check')}</button>
     <div class="taskbody" data-open="${t.id}">
       <div class="tasktext ${t.done?'done':''}">${escapeHtml(t.text)}</div>
       <div class="taskmeta">
@@ -676,7 +761,7 @@ function taskRowHTML(t){
 }
 function bindTaskRowEvents(root){
   $$('[data-toggle]', root).forEach(b => b.addEventListener('click', ()=>{
-    const t = state.tasks.find(x=>x.id===b.dataset.toggle); t.done=!t.done; persistTasks(); renderActive();
+    const t = state.tasks.find(x=>x.id===b.dataset.toggle); toggleTaskDone(t); persistTasks(); renderActive();
   }));
   $$('[data-open]', root).forEach(el => el.addEventListener('click', ()=>{
     const t = state.tasks.find(x=>x.id===el.dataset.open); openTaskModal({ type:t.type, task:t });
@@ -689,6 +774,15 @@ function bindTaskRowEvents(root){
 /* ============================= DAY TAB (единый лист) ============================= */
 function renderDay(){
   const t = todayISO();
+  // переносим незавершённые задачи с прошлых дней на сегодня
+  let moved = false;
+  state.tasks.forEach(x => {
+    if((x.type==='work'||x.type==='home') && x.date && x.date < t && !x.done){
+      x.date = t; moved = true;
+    }
+  });
+  if(moved) persistTasks();
+
   const work = state.tasks.filter(x=>x.type==='work' && x.date===t);
   const home = state.tasks.filter(x=>x.type==='home' && x.date===t);
   const entry = state.journal.find(j=>j.date===t);
@@ -696,15 +790,20 @@ function renderDay(){
   const html = `
     <div class="section-title" style="margin-top:6px">
       <h2><span class="accent-dot" style="background:var(--work)"></span>Работа</h2>
-      <span class="count">${work.length}/5</span>
+      <span class="count">${work.length}</span>
     </div>
     <div class="slotlist" id="workSlots"></div>
 
     <div class="section-title">
       <h2><span class="accent-dot" style="background:var(--home)"></span>Дом</h2>
-      <span class="count">${home.length}/3</span>
+      <span class="count">${home.length}</span>
     </div>
     <div class="slotlist" id="homeSlots"></div>
+
+    <div class="quickadd" style="margin-top:6px;">
+      <input type="text" id="dayInboxInput" placeholder="Мысль на бегу → во «Входящие»">
+      <button id="dayInboxAdd">${icon('plus')}</button>
+    </div>
 
     <div class="section-title"><h2><span class="accent-dot" style="background:var(--habit)"></span>Привычки сегодня</h2></div>
     <div class="card" id="dayHabits"></div>
@@ -720,10 +819,13 @@ function renderDay(){
   $('#tab-day').innerHTML = html;
 
   const workEl = $('#workSlots'), homeEl = $('#homeSlots');
-  workEl.innerHTML = work.map(taskRowHTML).join('') + (work.length<5 ? `<button class="addslot" data-addtask="work"><span class="plusring">+</span>Добавить рабочую задачу</button>` : '');
-  homeEl.innerHTML = home.map(taskRowHTML).join('') + (home.length<3 ? `<button class="addslot" data-addtask="home"><span class="plusring">+</span>Добавить домашнее дело</button>` : '');
+  workEl.innerHTML = work.map(taskRowHTML).join('') + `<button class="addslot" data-addtask="work"><span class="plusring">+</span>Добавить рабочую задачу</button>`;
+  homeEl.innerHTML = home.map(taskRowHTML).join('') + `<button class="addslot" data-addtask="home"><span class="plusring">+</span>Добавить домашнее дело</button>`;
   bindTaskRowEvents(workEl); bindTaskRowEvents(homeEl);
   $$('[data-addtask]').forEach(b => b.addEventListener('click', ()=> openTaskModal({ type:b.dataset.addtask, list:b.dataset.addtask, date:t })));
+
+  $('#dayInboxAdd').addEventListener('click', addDayInboxItem);
+  $('#dayInboxInput').addEventListener('keydown', e=>{ if(e.key==='Enter') addDayInboxItem(); });
 
   const habEl = $('#dayHabits');
   if(!state.habits.length){ habEl.innerHTML = `<div class="empty">Добавь привычки во вкладке «Привычки»</div>`; }
@@ -771,8 +873,19 @@ function renderDay(){
     if(!currentRating && !text && !currentPhoto) return;
     if(entry){ entry.rating = currentRating||entry.rating; entry.text = text; entry.photo = currentPhoto; }
     else { state.journal.push({ id: uid(), date:t, rating: currentRating||3, text, photo: currentPhoto }); }
-    persistJournal(); renderDay();
+    persistJournal();
+    const btn = $('#journalSave');
+    const original = btn.textContent;
+    btn.textContent = 'Сохранено ✓';
+    btn.style.opacity = '0.75';
+    setTimeout(()=>{ if($('#journalSave')){ $('#journalSave').textContent = original; $('#journalSave').style.opacity = '1'; } }, 1400);
   });
+}
+function addDayInboxItem(){
+  const inp = $('#dayInboxInput');
+  if(!inp.value.trim()) return;
+  state.tasks.push({ id: uid(), type:null, list:'inbox', text: inp.value.trim(), date:null, tags:[], subtasks:[], done:false, createdAt: Date.now(), recur:null });
+  inp.value=''; persistTasks();
 }
 function compressImage(file, maxW=640, quality=0.6){
   return new Promise((resolve, reject) => {
@@ -795,6 +908,8 @@ function compressImage(file, maxW=640, quality=0.6){
 }
 
 /* ============================= TASKS TAB (списки, как в Trello) ============================= */
+let expandedCards = new Set();
+let showDoneInList = new Set();
 function renderTasks(){
   const html = `
     <div class="kanban-board" id="kanbanBoard"></div>
@@ -802,13 +917,16 @@ function renderTasks(){
   $('#tab-tasks').innerHTML = html;
   const board = $('#kanbanBoard');
   board.innerHTML = state.lists.map(l => {
-    const items = state.tasks.filter(x=>x.list===l.id);
+    const allItems = state.tasks.filter(x=>x.list===l.id);
+    const active = allItems.filter(x=>!x.done);
+    const done = allItems.filter(x=>x.done);
+    const showDone = showDoneInList.has(l.id);
     return `
     <div class="kanban-col">
       <div class="kanban-col-head">
         <b data-listrename="${l.id}" style="cursor:pointer">${escapeHtml(l.name)}</b>
         <div class="row-gap" style="align-items:center; gap:6px;">
-          <span class="kc-count">${items.length}</span>
+          <span class="kc-count">${active.length}</span>
           ${!l.builtin ? `<button class="delbtn" data-listdel="${l.id}">${icon('x')}</button>` : ''}
         </div>
       </div>
@@ -817,7 +935,9 @@ function renderTasks(){
         <button data-qadd="${l.id}">${icon('plus')}</button>
       </div>
       <div class="kanban-cards">
-        ${items.length ? items.map(cardHTML).join('') : `<div class="empty" style="padding:10px 0">Пусто</div>`}
+        ${active.length ? active.map(cardHTML).join('') : `<div class="empty" style="padding:10px 0">Пусто</div>`}
+        ${done.length ? `<button class="btn small" data-toggledone="${l.id}" style="width:100%; margin:6px 0;">${showDone?'Скрыть':'Показать'} выполненные (${done.length})</button>` : ''}
+        ${showDone ? done.map(cardHTML).join('') : ''}
       </div>
     </div>`;
   }).join('') + `<button class="kanban-addcol" id="addListBtn">${icon('plus')} Новый список</button>`;
@@ -826,11 +946,29 @@ function renderTasks(){
   $$('[id^="qa-"]', board).forEach(inp => inp.addEventListener('keydown', e=>{
     if(e.key==='Enter'){ const listId = inp.id.slice(3); quickAddToList(listId); }
   }));
-  $$('[data-open]', board).forEach(el => el.addEventListener('click', ()=>{
-    const tsk = state.tasks.find(x=>x.id===el.dataset.open); openTaskModal({ task: tsk });
+  $$('[data-expand]', board).forEach(el => el.addEventListener('click', ()=>{
+    const id = el.dataset.expand;
+    if(expandedCards.has(id)) expandedCards.delete(id); else expandedCards.add(id);
+    renderTasks();
   }));
-  $$('[data-toggle]', board).forEach(b => b.addEventListener('click', ()=>{
-    const tsk = state.tasks.find(x=>x.id===b.dataset.toggle); tsk.done=!tsk.done; persistTasks(); renderTasks();
+  $$('[data-edit]', board).forEach(b => b.addEventListener('click', e=>{
+    e.stopPropagation();
+    const tsk = state.tasks.find(x=>x.id===b.dataset.edit); openTaskModal({ task: tsk });
+  }));
+  $$('[data-toggle]', board).forEach(b => b.addEventListener('click', e=>{
+    e.stopPropagation();
+    const tsk = state.tasks.find(x=>x.id===b.dataset.toggle); toggleTaskDone(tsk); persistTasks(); renderTasks();
+  }));
+  $$('[data-subtoggle]', board).forEach(b => b.addEventListener('click', e=>{
+    e.stopPropagation();
+    const tsk = state.tasks.find(x=>x.id===b.dataset.taskid);
+    const sub = tsk.subtasks.find(s=>s.id===b.dataset.subtoggle);
+    sub.done = !sub.done; persistTasks(); renderTasks();
+  }));
+  $$('[data-toggledone]', board).forEach(b => b.addEventListener('click', ()=>{
+    const id = b.dataset.toggledone;
+    if(showDoneInList.has(id)) showDoneInList.delete(id); else showDoneInList.add(id);
+    renderTasks();
   }));
   $$('[data-listdel]', board).forEach(b => b.addEventListener('click', ()=>{
     const id = b.dataset.listdel;
@@ -838,11 +976,7 @@ function renderTasks(){
     state.lists = state.lists.filter(l=>l.id!==id);
     persistTasks(); renderTasks();
   }));
-  $$('[data-listrename]', board).forEach(el => el.addEventListener('click', ()=>{
-    const l = state.lists.find(x=>x.id===el.dataset.listrename);
-    const newName = renamePrompt(l.name);
-    if(newName){ l.name = newName; persistTasks(); renderTasks(); }
-  }));
+  $$('[data-listrename]', board).forEach(el => el.addEventListener('click', ()=> openListEditModal(el.dataset.listrename)));
   $('#addListBtn').addEventListener('click', ()=>{
     const name = prompt('Название списка');
     if(name && name.trim()){ state.lists.push({ id: uid(), name: name.trim(), builtin:false }); persistTasks(); renderTasks(); }
@@ -850,25 +984,41 @@ function renderTasks(){
 }
 function cardHTML(t){
   const subDone = t.subtasks.filter(s=>s.done).length;
-  const accent = t.type==='work' ? 'var(--work)' : t.type==='home' ? 'var(--home)' : 'var(--goal)';
+  const accent = getListColor(t.list);
+  const expanded = expandedCards.has(t.id);
   return `
   <div class="kcard">
-    <button class="checkbox ${t.done?'done':''}" style="${t.done?`background:${accent};border-color:${accent}`:''}" data-toggle="${t.id}">${icon('check')}</button>
-    <div style="flex:1" data-open="${t.id}">
-      <div class="kctext ${t.done?'done':''}">${escapeHtml(t.text)}</div>
-      <div class="kcmeta">
-        ${t.date ? `<span class="chip">${fmtHuman(t.date)}</span>` : ''}
-        ${t.tags.map(tag=>`<span class="chip">${escapeHtml(tag)}</span>`).join('')}
-        ${t.subtasks.length ? `<span class="chip sub">${subDone}/${t.subtasks.length}</span>` : ''}
+    <div style="display:flex; gap:8px; align-items:flex-start;">
+      <button class="checkbox ${t.done?'done':''}" style="${t.done?`background:${accent};border-color:${accent}`:''}" data-toggle="${t.id}">${icon('check')}</button>
+      <div style="flex:1" data-expand="${t.id}">
+        <div class="kctext ${t.done?'done':''}">${escapeHtml(t.text)}</div>
+        <div class="kcmeta">
+          ${t.date ? `<span class="chip">${fmtHuman(t.date)}</span>` : ''}
+          ${t.recur ? `<span class="chip">🔁</span>` : ''}
+          ${t.tags.map(tag=>`<span class="chip">${escapeHtml(tag)}</span>`).join('')}
+          ${t.subtasks.length ? `<span class="chip sub">${subDone}/${t.subtasks.length}</span>` : ''}
+        </div>
       </div>
+      <button class="delbtn" data-edit="${t.id}">${icon('edit')}</button>
     </div>
+    ${expanded && t.subtasks.length ? `
+      <div style="margin-top:8px; padding-top:8px; border-top:1px dashed var(--border);">
+        ${t.subtasks.map(s => `
+          <div style="display:flex; align-items:center; gap:8px; padding:4px 0;">
+            <button class="checkbox ${s.done?'done':''}" style="width:16px;height:16px; ${s.done?`background:${accent};border-color:${accent}`:''}" data-subtoggle="${s.id}" data-taskid="${t.id}">${icon('check')}</button>
+            <span style="font-size:12.5px; flex:1; ${s.done?'color:var(--text-faint); text-decoration:line-through;':''}">${escapeHtml(s.text)}</span>
+            ${s.date ? `<span class="chip" style="font-size:10px;">${fmtHuman(s.date)}</span>` : ''}
+          </div>
+        `).join('')}
+      </div>
+    ` : ''}
   </div>`;
 }
 function quickAddToList(listId){
   const inp = $('#qa-'+listId);
   if(!inp.value.trim()) return;
   const type = (listId==='work'||listId==='home') ? listId : null;
-  state.tasks.push({ id: uid(), type, list: listId, text: inp.value.trim(), date:null, tags:[], subtasks:[], done:false, createdAt: Date.now() });
+  state.tasks.push({ id: uid(), type, list: listId, text: inp.value.trim(), date:null, tags:[], subtasks:[], done:false, createdAt: Date.now(), recur:null });
   inp.value=''; persistTasks(); renderTasks();
 }
 
@@ -891,24 +1041,29 @@ function renderCalendar(){
       <h2>${MONTHS_NOM[m-1]} ${y}</h2>
       <button class="cal-nav" id="calNext">${icon('chevRight')}</button>
     </div>
+    <button class="btn" id="calStatsBtn" style="width:100%; margin-bottom:14px; display:flex; align-items:center; justify-content:center; gap:8px;">📊 Статистика месяца</button>
     <div class="cal-grid">
       ${DOW.map(d=>`<div class="cal-dow">${d}</div>`).join('')}
       ${cells.map(c => {
         if(c.faded) return `<div class="cal-cell faded">${c.day}</div>`;
-        const work = state.tasks.some(t=>t.type==='work' && t.date===c.iso);
-        const home = state.tasks.some(t=>t.type==='home' && t.date===c.iso);
+        const dayTasks = state.tasks.filter(t=>t.date===c.iso);
+        const listsToday = [...new Set(dayTasks.map(t=>t.list))];
         const jr = state.journal.find(j=>j.date===c.iso);
         const isToday = c.iso === todayISO();
         const coverStyle = jr && jr.photo
           ? `style="background-image:linear-gradient(180deg, rgba(0,0,0,.05), rgba(0,0,0,.6)), url('${jr.photo}'); background-size:cover; background-position:center; color:#fff;"`
           : '';
+        const dots = listsToday.map(lid => {
+          const color = getListColor(lid);
+          const all = dayTasks.filter(t=>t.list===lid);
+          const allDone = all.every(t=>t.done);
+          return allDone
+            ? `<i style="background:${color};"></i>`
+            : `<i style="background:transparent; border:1.5px solid ${color};"></i>`;
+        }).join('') + ((jr && !jr.photo) ? `<i style="background:var(--journal)"></i>` : '');
         return `<button class="cal-cell ${isToday?'today':''}" data-day="${c.iso}" ${coverStyle}>
           ${c.day}
-          <div class="cal-dots">
-            ${work?'<i style="background:var(--work)"></i>':''}
-            ${home?'<i style="background:var(--home)"></i>':''}
-            ${(jr && !jr.photo)?'<i style="background:var(--journal)"></i>':''}
-          </div>
+          <div class="cal-dots">${dots}</div>
         </button>`;
       }).join('')}
     </div>
@@ -916,7 +1071,73 @@ function renderCalendar(){
   $('#tab-calendar').innerHTML = html;
   $('#calPrev').addEventListener('click', ()=>{ calMonth = shiftMonth(calMonth,-1); renderCalendar(); });
   $('#calNext').addEventListener('click', ()=>{ calMonth = shiftMonth(calMonth,1); renderCalendar(); });
+  $('#calStatsBtn').addEventListener('click', ()=> openCalendarStats(calMonth));
   $$('[data-day]').forEach(b => b.addEventListener('click', ()=> openDayDetail(b.dataset.day)));
+}
+function openCalendarStats(monthKeyVal){
+  const [y,m] = monthKeyVal.split('-').map(Number);
+  const prefix = `${y}-${pad2(m)}-`;
+  const daysInMonth = new Date(y, m, 0).getDate();
+  const monthTasks = state.tasks.filter(t => t.date && t.date.startsWith(prefix));
+  const total = monthTasks.length;
+  const done = monthTasks.filter(t=>t.done).length;
+  const pct = total ? Math.round(done/total*100) : 0;
+  const byList = state.lists.map(l => {
+    const items = monthTasks.filter(t=>t.list===l.id);
+    if(!items.length) return null;
+    const d = items.filter(t=>t.done).length;
+    return { name:l.name, color:l.color, total:items.length, done:d };
+  }).filter(Boolean);
+  const t = todayISO();
+  const byDay = [];
+  for(let d=1; d<=daysInMonth; d++){
+    const iso = `${y}-${pad2(m)}-${pad2(d)}`;
+    const items = monthTasks.filter(x=>x.date===iso);
+    if(!items.length) continue;
+    const doneCount = items.filter(x=>x.done).length;
+    byDay.push({ iso, day:d, total:items.length, done:doneCount, isToday: iso===t });
+  }
+  const html = `
+    <div class="modal-title">Статистика — ${MONTHS_NOM[m-1]} ${y}</div>
+    <div class="card" style="text-align:center; padding:20px;">
+      <div style="font-size:38px; font-weight:800; font-family:'Manrope'; color:var(--work);">${pct}%</div>
+      <div class="hint" style="margin-top:4px;">${done} из ${total} запланированных задач выполнено</div>
+    </div>
+    ${byList.map(l => `
+      <div style="margin-bottom:12px;">
+        <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px;">
+          <span><span class="accent-dot" style="background:${l.color}"></span>${escapeHtml(l.name)}</span>
+          <span style="color:var(--text-faint)">${l.done}/${l.total}</span>
+        </div>
+        <div style="height:6px; border-radius:4px; background:var(--surface2); overflow:hidden;">
+          <div style="height:100%; width:${l.total?Math.round(l.done/l.total*100):0}%; background:${l.color};"></div>
+        </div>
+      </div>
+    `).join('')}
+    ${!byList.length && !byDay.length ? `<div class="empty">В этом месяце пока нет задач с датой</div>` : ''}
+    ${byDay.length ? `
+      <div class="section-title" style="margin-top:20px;"><h2>По дням</h2></div>
+      <div class="card" style="padding:6px 14px;">
+        ${byDay.map(d => {
+          const dPct = d.total ? Math.round(d.done/d.total*100) : 0;
+          const full = d.done===d.total;
+          return `
+          <div class="minirow" style="${d.isToday?'background:var(--surface2); margin:0 -14px; padding:10px 14px;':''}">
+            <div style="flex:1; margin-right:12px;">
+              <div style="display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:4px;">
+                <span style="font-weight:${d.isToday?'800':'600'};">${d.day} ${MONTHS[m-1]}${d.isToday?' · сегодня':''}</span>
+                <span style="color:${full?'var(--habit)':'var(--text-faint)'}; font-weight:700;">${d.done}/${d.total}</span>
+              </div>
+              <div style="height:5px; border-radius:3px; background:var(--surface2); overflow:hidden;">
+                <div style="height:100%; width:${dPct}%; background:${full?'var(--habit)':'var(--work)'};"></div>
+              </div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    ` : ''}
+  `;
+  openModal(html, ()=>{});
 }
 function shiftMonth(key, delta){
   let [y,m] = key.split('-').map(Number);
@@ -956,7 +1177,7 @@ function openDayDetail(iso){
 }
 function bindDayModalRow(root, iso){
   $$('[data-toggle]', root).forEach(b => b.addEventListener('click', ()=>{
-    const t = state.tasks.find(x=>x.id===b.dataset.toggle); t.done=!t.done; persistTasks(); openDayDetail(iso);
+    const t = state.tasks.find(x=>x.id===b.dataset.toggle); toggleTaskDone(t); persistTasks(); openDayDetail(iso);
   }));
   $$('[data-open]', root).forEach(el => el.addEventListener('click', ()=>{
     const t = state.tasks.find(x=>x.id===el.dataset.open); closeModal(); openTaskModal({ type:t.type, task:t });
@@ -989,35 +1210,27 @@ function buildMonthCells(key){
   while(cells.length % 7 !== 0) cells.push({ day: cells.length, faded:true });
   return cells;
 }
+let habitsMonthsShown = 3;
 function renderHabits(){
-  const [y,m] = habitsMonthCursor.split('-').map(Number);
-  const cells = buildMonthCells(habitsMonthCursor);
   const t = todayISO();
+  const monthKeys = [];
+  let cursor = monthKey(t);
+  for(let i=0; i<habitsMonthsShown; i++){ monthKeys.push(cursor); cursor = shiftMonth(cursor,-1); }
 
   const html = `
     <div class="quickadd" style="margin-top:4px">
       <input type="text" id="habitInput" placeholder="Новая привычка">
       <button id="habitAdd">${icon('plus')}</button>
     </div>
-    <div class="cal-header">
-      <button class="cal-nav" id="hmPrev">${icon('chevLeft')}</button>
-      <h2>${MONTHS_NOM[m-1]} ${y}</h2>
-      <button class="cal-nav" id="hmNext">${icon('chevRight')}</button>
-    </div>
     <div id="habitList"></div>
+    ${state.habits.length ? `<button class="btn" id="habitsMoreBtn" style="width:100%; margin-top:8px;">Показать ещё месяцев</button>` : ''}
   `;
   $('#tab-habits').innerHTML = html;
-  $('#hmPrev').addEventListener('click', ()=>{ habitsMonthCursor = shiftMonth(habitsMonthCursor,-1); renderHabits(); });
-  $('#hmNext').addEventListener('click', ()=>{ habitsMonthCursor = shiftMonth(habitsMonthCursor,1); renderHabits(); });
 
   const listEl = $('#habitList');
   if(!state.habits.length){ listEl.innerHTML = `<div class="empty">Добавь первую привычку выше</div>`; }
   else {
-    listEl.innerHTML = state.habits.map(h => {
-      const elapsed = cells.filter(c=>!c.faded && c.iso<=t);
-      const done = elapsed.filter(c=>state.habitEntries[`${h.id}_${c.iso}`]).length;
-      const pct = elapsed.length ? Math.round(done/elapsed.length*100) : 0;
-      return `
+    listEl.innerHTML = state.habits.map(h => `
       <div class="habitcard">
         <div class="habithead">
           <b data-hrename="${h.id}" style="cursor:pointer">${escapeHtml(h.name)}</b>
@@ -1026,17 +1239,11 @@ function renderHabits(){
             <button class="delbtn" data-hdel="${h.id}">${icon('x')}</button>
           </div>
         </div>
-        <div class="habit-stats">${elapsed.length ? `${done}/${elapsed.length} дней · ${pct}% · пропущено ${elapsed.length-done}` : 'пока нет данных за месяц'}</div>
-        <div class="heat-grid">
-          ${cells.map(c => {
-            if(c.faded) return `<div class="heat-cell faded"></div>`;
-            const isDone = !!state.habitEntries[`${h.id}_${c.iso}`];
-            const future = c.iso > t;
-            return `<button class="heat-cell ${isDone?'done':''} ${future?'future':''}" data-hid="${h.id}" data-date="${c.iso}" ${future?'disabled':''} title="${c.day}"></button>`;
-          }).join('')}
+        <div class="habit-months-grid">
+          ${monthKeys.map(mk => habitMonthBlockHTML(h, mk, t)).join('')}
         </div>
-      </div>`;
-    }).join('');
+      </div>`
+    ).join('');
     $$('[data-hid]', listEl).forEach(b => b.addEventListener('click', ()=>{
       const key = `${b.dataset.hid}_${b.dataset.date}`;
       if(state.habitEntries[key]) delete state.habitEntries[key]; else state.habitEntries[key]=true;
@@ -1058,6 +1265,29 @@ function renderHabits(){
     inp.value=''; persistHabits(); renderHabits();
   });
   $('#habitInput').addEventListener('keydown', e=>{ if(e.key==='Enter') $('#habitAdd').click(); });
+  const moreBtn = $('#habitsMoreBtn');
+  if(moreBtn) moreBtn.addEventListener('click', ()=>{ habitsMonthsShown += 3; renderHabits(); });
+}
+function habitMonthBlockHTML(h, mk, t){
+  const [y,m] = mk.split('-').map(Number);
+  const cells = buildMonthCells(mk);
+  const elapsed = cells.filter(c=>!c.faded && c.iso<=t);
+  const done = elapsed.filter(c=>state.habitEntries[`${h.id}_${c.iso}`]).length;
+  const pct = elapsed.length ? Math.round(done/elapsed.length*100) : 0;
+  return `
+    <div>
+      <div style="font-size:12px; font-weight:700; color:var(--text-muted); margin-bottom:4px;">${MONTHS_NOM[m-1]} ${y}</div>
+      <div class="habit-stats" style="font-size:11px; margin-bottom:6px;">${elapsed.length ? `${done}/${elapsed.length} · ${pct}%` : 'нет данных'}</div>
+      <div class="heat-grid">
+        ${cells.map(c => {
+          if(c.faded) return `<div class="heat-cell faded"></div>`;
+          const isDone = !!state.habitEntries[`${h.id}_${c.iso}`];
+          const future = c.iso > t;
+          return `<button class="heat-cell ${isDone?'done':''} ${future?'future':''}" data-hid="${h.id}" data-date="${c.iso}" ${future?'disabled':''} title="${c.day}"></button>`;
+        }).join('')}
+      </div>
+    </div>
+  `;
 }
 
 /* ============================= SPORT TAB ============================= */
@@ -1208,6 +1438,7 @@ function openSportStats(){
             if(c.faded) return `<div class="cal-cell faded">${c.day}</div>`;
             const hasReps = state.sportLogs[c.iso] && Object.values(state.sportLogs[c.iso]).some(arr=>arr && arr.length);
             const hasWorkout = state.workouts.some(w=>w.date===c.iso);
+            const hasMeasure = state.measurements.some(me=>me.date===c.iso);
             const isToday = c.iso===todayISO();
             const isSel = c.iso===selectedDay;
             return `<button class="cal-cell ${isToday?'today':''}" style="${isSel?'border-color:var(--sport); border-width:2px;':''}" data-ssday="${c.iso}">
@@ -1215,9 +1446,15 @@ function openSportStats(){
               <div class="cal-dots">
                 ${hasReps?'<i style="background:var(--sport)"></i>':''}
                 ${hasWorkout?'<i style="background:var(--goal)"></i>':''}
+                ${hasMeasure?'<i style="background:var(--journal)"></i>':''}
               </div>
             </button>`;
           }).join('')}
+        </div>
+        <div class="row-gap" style="margin-top:10px; font-size:11.5px; color:var(--text-faint);">
+          <span><span class="accent-dot" style="background:var(--sport)"></span>упражнения</span>
+          <span><span class="accent-dot" style="background:var(--goal)"></span>тренировка</span>
+          <span><span class="accent-dot" style="background:var(--journal)"></span>замер</span>
         </div>
         <div id="ssDetail" style="margin-top:14px;"></div>
       `;
@@ -1236,8 +1473,11 @@ function openSportStats(){
       const woRows = state.workouts.filter(w=>w.date===iso).map(w =>
         `<div class="minirow"><div class="l">${escapeHtml(w.name)}</div><div class="r">${w.duration?w.duration+' мин':''}${w.note?' · '+escapeHtml(w.note):''}</div></div>`
       ).join('');
+      const meRows = state.measurements.filter(me=>me.date===iso).map(me =>
+        `<div class="minirow"><div class="l">Замер</div><div class="r">${me.weight?me.weight+' кг':''}${me.waist?' · талия '+me.waist:''}${me.hips?' · бёдра '+me.hips:''}${me.chest?' · грудь '+me.chest:''}</div></div>`
+      ).join('');
       el.innerHTML = `<div class="section-title" style="margin-top:0"><h2>${fmtHuman(iso)}</h2></div>` +
-        (exRows || woRows ? exRows + woRows : `<div class="empty">В этот день активности не было</div>`);
+        (exRows || woRows || meRows ? exRows + woRows + meRows : `<div class="empty">В этот день активности не было</div>`);
     }
     draw();
   });
