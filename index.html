@@ -481,20 +481,24 @@ async function saveKey(key, value){
     }
   }
 }
-function retryAllSaves(){ persistTasks(); persistHabits(); persistSport(); persistJournal(); persistGoals(); }
+function retryAllSaves(){ persistTasks(); persistHabits(); persistSport(); persistJournal(); persistGoals(); persistSettings(); }
 window.addEventListener('online', ()=>{ if(pendingKeys.size) retryAllSaves(); });
 
 function defaultLists(){
   return [
-    { id:'inbox', name:'Входящие', builtin:true, color:'#9077BB' },
-    { id:'work', name:'Работа', builtin:true, color:'#D68A3A' },
-    { id:'home', name:'Дом', builtin:true, color:'#CD7C60' },
+    { id:'inbox', name:'Входящие', builtin:true, color:'#5C6BAA' },
+    { id:'work', name:'Работа', builtin:true, color:'#FF9F1C' },
+    { id:'home', name:'Дом', builtin:true, color:'#FF8A8A' },
   ];
 }
-const LIST_COLOR_PALETTE = ['#9077BB','#D68A3A','#CD7C60','#6FA36A','#4E93B8','#C17998','#8A8F6E','#B8935A'];
+const LIST_COLOR_PALETTE = [
+  '#F65353','#FF8A8A','#FF9E62','#FF9F1C','#F6CC45','#AED67E','#72AA91','#5C93AA','#81B1CD','#03468F','#5C6BAA','#795CAA','#A55CAA','#FFA9BA',
+  '#829D88','#355C7D','#35387D',
+  '#A8C7D6','#A8AFD6','#D4A8D6','#FFD7D6'
+];
 function getListColor(listId){
   const l = state.lists.find(x=>x.id===listId);
-  return l ? l.color : '#9077BB';
+  return l ? l.color : '#5C6BAA';
 }
 
 const state = {
@@ -502,7 +506,8 @@ const state = {
   habits: [], habitEntries: {},
   exercises: [], sportLogs: {}, workouts: [], measurements: [],
   journal: [],
-  goalsMonthly: [], goalsWeekly: []
+  goalsMonthly: [], goalsWeekly: [],
+  otherColor: '#5C6BAA'
 };
 
 const persistTasks  = debounce(()=> saveKey('tasks-data',  { tasks: state.tasks, lists: state.lists }), 350);
@@ -510,14 +515,16 @@ const persistHabits  = debounce(()=> saveKey('habits-data', { habits: state.habi
 const persistSport   = debounce(()=> saveKey('sport-data',  { exercises: state.exercises, sportLogs: state.sportLogs, workouts: state.workouts, measurements: state.measurements }), 350);
 const persistJournal = debounce(()=> saveKey('journal-data',{ journal: state.journal }), 350);
 const persistGoals   = debounce(()=> saveKey('goals-data',  { goalsMonthly: state.goalsMonthly, goalsWeekly: state.goalsWeekly }), 350);
+const persistSettings = debounce(()=> saveKey('settings-data', { otherColor: state.otherColor }), 350);
 
 async function loadAll(){
-  const [t, h, s, j, g] = await Promise.all([
+  const [t, h, s, j, g, st] = await Promise.all([
     loadKey('tasks-data', null),
     loadKey('habits-data', null),
     loadKey('sport-data', null),
     loadKey('journal-data', null),
     loadKey('goals-data', null),
+    loadKey('settings-data', null),
   ]);
   if(t){
     state.tasks = t.tasks || [];
@@ -534,14 +541,20 @@ async function loadAll(){
       if(task.recur === undefined) task.recur = null;
       (task.subtasks||[]).forEach(s => { if(s.date===undefined) s.date=null; if(!s.tags) s.tags=[]; });
     });
-    // ensure every list has a color (older lists predating colors)
+    // ensure every list has a color; one-time migration from the old default palette to the new one
     const defaults = defaultLists();
-    state.lists.forEach((l,i) => { if(!l.color) l.color = (defaults.find(d=>d.id===l.id)||{}).color || LIST_COLOR_PALETTE[i % LIST_COLOR_PALETTE.length]; });
+    const OLD_DEFAULTS = { inbox:'#9077BB', work:'#D68A3A', home:'#CD7C60' };
+    state.lists.forEach((l,i) => {
+      const def = defaults.find(d=>d.id===l.id);
+      if(def && (!l.color || l.color === OLD_DEFAULTS[l.id])) l.color = def.color;
+      else if(!l.color) l.color = LIST_COLOR_PALETTE[i % LIST_COLOR_PALETTE.length];
+    });
   }
   if(h){ state.habits=h.habits||[]; state.habitEntries=h.habitEntries||{}; }
   if(s){ state.exercises=s.exercises||[]; state.sportLogs=s.sportLogs||{}; state.workouts=s.workouts||[]; state.measurements=s.measurements||[]; }
   if(j){ state.journal=j.journal||[]; }
   if(g){ state.goalsMonthly=g.goalsMonthly||[]; state.goalsWeekly=g.goalsWeekly||[]; }
+  if(st && st.otherColor){ state.otherColor = st.otherColor; }
 }
 
 /* ============================= NAV / ROUTER ============================= */
@@ -716,11 +729,12 @@ function openListEditModal(listId){
     <div class="modal-title">Список</div>
     <div class="field"><label>Название</label><input type="text" id="le-name" value="${escapeHtml(l.name)}"></div>
     <div class="field"><label>Цвет (для точек в календаре)</label>
+      <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
+        ${LIST_COLOR_PALETTE.map(c=>`<button type="button" data-swatch="${c}" style="width:28px;height:28px;border-radius:50%;background:${c};border:2px solid ${c.toLowerCase()===l.color.toLowerCase()?'var(--text)':'transparent'}; flex:0 0 auto;"></button>`).join('')}
+      </div>
       <div class="row-gap" style="align-items:center;">
+        <span class="hint" style="margin:0;">Или свой цвет:</span>
         <input type="color" id="le-color" value="${l.color}" style="width:48px; height:38px; border:1px solid var(--border); border-radius:8px; padding:2px; background:var(--surface2);">
-        <div class="row-gap">
-          ${LIST_COLOR_PALETTE.map(c=>`<button type="button" data-swatch="${c}" style="width:26px;height:26px;border-radius:50%;background:${c};border:2px solid ${c===l.color?'var(--text)':'transparent'};"></button>`).join('')}
-        </div>
       </div>
     </div>
     <div class="modal-actions">
@@ -728,7 +742,10 @@ function openListEditModal(listId){
     </div>
   `;
   openModal(html, root => {
-    $$('[data-swatch]', root).forEach(b => b.addEventListener('click', ()=>{ $('#le-color', root).value = b.dataset.swatch; }));
+    $$('[data-swatch]', root).forEach(b => b.addEventListener('click', ()=>{
+      $('#le-color', root).value = b.dataset.swatch;
+      $$('[data-swatch]', root).forEach(sw => sw.style.borderColor = sw.dataset.swatch===b.dataset.swatch ? 'var(--text)' : 'transparent');
+    }));
     $('#le-save', root).addEventListener('click', ()=>{
       const name = $('#le-name', root).value.trim();
       if(name) l.name = name;
@@ -785,6 +802,7 @@ function renderDay(){
 
   const work = state.tasks.filter(x=>x.type==='work' && x.date===t);
   const home = state.tasks.filter(x=>x.type==='home' && x.date===t);
+  const other = state.tasks.filter(x=>x.type===null && x.date===t);
   const entry = state.journal.find(j=>j.date===t);
 
   const html = `
@@ -799,6 +817,15 @@ function renderDay(){
       <span class="count">${home.length}</span>
     </div>
     <div class="slotlist" id="homeSlots"></div>
+
+    <div class="section-title">
+      <h2>
+        <input type="color" id="otherColorPicker" value="${state.otherColor}" style="width:11px; height:11px; padding:0; border:none; border-radius:50%; margin-right:7px; vertical-align:middle; cursor:pointer;">
+        Другое
+      </h2>
+      <span class="count">${other.length}</span>
+    </div>
+    <div class="slotlist" id="otherSlots"></div>
 
     <div class="quickadd" style="margin-top:6px;">
       <input type="text" id="dayInboxInput" placeholder="Мысль на бегу → во «Входящие»">
@@ -818,11 +845,17 @@ function renderDay(){
   `;
   $('#tab-day').innerHTML = html;
 
-  const workEl = $('#workSlots'), homeEl = $('#homeSlots');
+  const workEl = $('#workSlots'), homeEl = $('#homeSlots'), otherEl = $('#otherSlots');
   workEl.innerHTML = work.map(taskRowHTML).join('') + `<button class="addslot" data-addtask="work"><span class="plusring">+</span>Добавить рабочую задачу</button>`;
   homeEl.innerHTML = home.map(taskRowHTML).join('') + `<button class="addslot" data-addtask="home"><span class="plusring">+</span>Добавить домашнее дело</button>`;
-  bindTaskRowEvents(workEl); bindTaskRowEvents(homeEl);
+  otherEl.innerHTML = other.map(taskRowHTML).join('') + `<button class="addslot" data-addother="1"><span class="plusring">+</span>Добавить задачу из другого списка</button>`;
+  bindTaskRowEvents(workEl); bindTaskRowEvents(homeEl); bindTaskRowEvents(otherEl);
   $$('[data-addtask]').forEach(b => b.addEventListener('click', ()=> openTaskModal({ type:b.dataset.addtask, list:b.dataset.addtask, date:t })));
+  $('[data-addother]').addEventListener('click', ()=> openTaskModal({ date:t }));
+
+  $('#otherColorPicker').addEventListener('change', e => {
+    state.otherColor = e.target.value; persistSettings(); renderDay();
+  });
 
   $('#dayInboxAdd').addEventListener('click', addDayInboxItem);
   $('#dayInboxInput').addEventListener('keydown', e=>{ if(e.key==='Enter') addDayInboxItem(); });
@@ -1074,6 +1107,28 @@ function renderCalendar(){
   $('#calStatsBtn').addEventListener('click', ()=> openCalendarStats(calMonth));
   $$('[data-day]').forEach(b => b.addEventListener('click', ()=> openDayDetail(b.dataset.day)));
 }
+function buildActivityRings(rings, size=180, strokeW=14){
+  const cx = size/2, cy = size/2;
+  const circles = rings.map(r => {
+    const circ = 2*Math.PI*r.radius;
+    const dash = Math.max(0, Math.min(1, r.pct/100)) * circ;
+    return `
+      <circle cx="${cx}" cy="${cy}" r="${r.radius}" fill="none" stroke="${r.color}" stroke-width="${strokeW}" opacity="0.18"></circle>
+      ${dash>0 ? `<circle cx="${cx}" cy="${cy}" r="${r.radius}" fill="none" stroke="${r.color}" stroke-width="${strokeW}"
+        stroke-dasharray="${dash} ${circ}" stroke-linecap="round"
+        transform="rotate(-90 ${cx} ${cy})"></circle>` : ''}
+    `;
+  }).join('');
+  return `<svg viewBox="0 0 ${size} ${size}" style="width:${size}px; height:${size}px; display:block; margin:0 auto;">${circles}</svg>`;
+}
+function dayRingsHTML(iso, workPct, homePct, otherPct){
+  const size=52, r1=21, r2=15, r3=9, sw=4.5;
+  return buildActivityRings([
+    { pct: workPct, color: getListColor('work'), radius: r1 },
+    { pct: homePct, color: getListColor('home'), radius: r2 },
+    { pct: otherPct, color: state.otherColor, radius: r3 },
+  ], size, sw);
+}
 function openCalendarStats(monthKeyVal){
   const [y,m] = monthKeyVal.split('-').map(Number);
   const prefix = `${y}-${pad2(m)}-`;
@@ -1081,7 +1136,11 @@ function openCalendarStats(monthKeyVal){
   const monthTasks = state.tasks.filter(t => t.date && t.date.startsWith(prefix));
   const total = monthTasks.length;
   const done = monthTasks.filter(t=>t.done).length;
-  const pct = total ? Math.round(done/total*100) : 0;
+  const workTasks = monthTasks.filter(t=>t.type==='work');
+  const homeTasks = monthTasks.filter(t=>t.type==='home');
+  const otherTasks = monthTasks.filter(t=>t.type===null);
+  const ringPct = arr => arr.length ? Math.round(arr.filter(x=>x.done).length/arr.length*100) : 0;
+  const workPct = ringPct(workTasks), homePct = ringPct(homeTasks), otherPct = ringPct(otherTasks);
   const byList = state.lists.map(l => {
     const items = monthTasks.filter(t=>t.list===l.id);
     if(!items.length) return null;
@@ -1089,19 +1148,32 @@ function openCalendarStats(monthKeyVal){
     return { name:l.name, color:l.color, total:items.length, done:d };
   }).filter(Boolean);
   const t = todayISO();
-  const byDay = [];
-  for(let d=1; d<=daysInMonth; d++){
-    const iso = `${y}-${pad2(m)}-${pad2(d)}`;
-    const items = monthTasks.filter(x=>x.date===iso);
-    if(!items.length) continue;
-    const doneCount = items.filter(x=>x.done).length;
-    byDay.push({ iso, day:d, total:items.length, done:doneCount, isToday: iso===t });
-  }
+  const cells = buildMonthCells(monthKeyVal);
+  const dayRingData = {};
+  cells.forEach(c => {
+    if(c.faded) return;
+    const items = state.tasks.filter(x=>x.date===c.iso);
+    const w = items.filter(x=>x.type==='work');
+    const h = items.filter(x=>x.type==='home');
+    const o = items.filter(x=>x.type===null);
+    dayRingData[c.iso] = {
+      total: items.length,
+      workPct: w.length?Math.round(w.filter(x=>x.done).length/w.length*100):0,
+      homePct: h.length?Math.round(h.filter(x=>x.done).length/h.length*100):0,
+      otherPct: o.length?Math.round(o.filter(x=>x.done).length/o.length*100):0,
+    };
+  });
+  const pct = total ? Math.round(done/total*100) : 0;
   const html = `
     <div class="modal-title">Статистика — ${MONTHS_NOM[m-1]} ${y}</div>
     <div class="card" style="text-align:center; padding:20px;">
       <div style="font-size:38px; font-weight:800; font-family:'Manrope'; color:var(--work);">${pct}%</div>
       <div class="hint" style="margin-top:4px;">${done} из ${total} запланированных задач выполнено</div>
+    </div>
+    <div class="row-gap" style="justify-content:center; margin:-6px 0 16px; font-size:12.5px;">
+      <span><span class="accent-dot" style="background:${getListColor('work')}"></span>Работа ${workPct}%</span>
+      <span><span class="accent-dot" style="background:${getListColor('home')}"></span>Дом ${homePct}%</span>
+      <span><span class="accent-dot" style="background:${state.otherColor}"></span>Другое ${otherPct}%</span>
     </div>
     ${byList.map(l => `
       <div style="margin-bottom:12px;">
@@ -1114,28 +1186,20 @@ function openCalendarStats(monthKeyVal){
         </div>
       </div>
     `).join('')}
-    ${!byList.length && !byDay.length ? `<div class="empty">В этом месяце пока нет задач с датой</div>` : ''}
-    ${byDay.length ? `
-      <div class="section-title" style="margin-top:20px;"><h2>По дням</h2></div>
-      <div class="card" style="padding:6px 14px;">
-        ${byDay.map(d => {
-          const dPct = d.total ? Math.round(d.done/d.total*100) : 0;
-          const full = d.done===d.total;
-          return `
-          <div class="minirow" style="${d.isToday?'background:var(--surface2); margin:0 -14px; padding:10px 14px;':''}">
-            <div style="flex:1; margin-right:12px;">
-              <div style="display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:4px;">
-                <span style="font-weight:${d.isToday?'800':'600'};">${d.day} ${MONTHS[m-1]}${d.isToday?' · сегодня':''}</span>
-                <span style="color:${full?'var(--habit)':'var(--text-faint)'}; font-weight:700;">${d.done}/${d.total}</span>
-              </div>
-              <div style="height:5px; border-radius:3px; background:var(--surface2); overflow:hidden;">
-                <div style="height:100%; width:${dPct}%; background:${full?'var(--habit)':'var(--work)'};"></div>
-              </div>
-            </div>
-          </div>`;
-        }).join('')}
-      </div>
-    ` : ''}
+    ${!byList.length ? `<div class="empty">В этом месяце пока нет задач с датой</div>` : ''}
+    <div class="section-title" style="margin-top:20px;"><h2>По дням</h2></div>
+    <div class="cal-grid">
+      ${DOW.map(d=>`<div class="cal-dow">${d}</div>`).join('')}
+      ${cells.map(c => {
+        if(c.faded) return `<div class="cal-cell faded" style="background:none; border:none; box-shadow:none;">${c.day}</div>`;
+        const d = dayRingData[c.iso];
+        const isToday = c.iso===t;
+        return `<div style="display:flex; flex-direction:column; align-items:center; gap:2px;">
+          ${d.total ? dayRingsHTML(c.iso, d.workPct, d.homePct, d.otherPct) : `<div style="width:52px; height:52px; border-radius:50%; border:1px dashed var(--border);"></div>`}
+          <span style="font-size:11px; ${isToday?'font-weight:800; color:var(--text);':'color:var(--text-faint);'}">${c.day}</span>
+        </div>`;
+      }).join('')}
+    </div>
   `;
   openModal(html, ()=>{});
 }
