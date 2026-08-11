@@ -359,13 +359,13 @@ function icon(name, cls=''){
 
 /* ============================= STORAGE (Supabase, откат на Claude) ============================= */
 const SUPABASE_URL = 'https://dlvddgyyamalwlxpyhoi.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_FYGpET_Hu7HVIDuJvT_Fkw_sCxHEJp4';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRsdmRkZ3l5YW1hbHdseHB5aG9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY0NjAwODEsImV4cCI6MjEwMjAzNjA4MX0.Vw2hH55YHv-tO_k2sx-nSPvgDM-vakuHYVFpBUh08uo';
 const SB_TABLE = 'Storage';
 let storageMode = 'supabase'; // 'supabase' | 'claude'
 
 async function sbGet(key){
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${SB_TABLE}?key=eq.${encodeURIComponent(key)}&select=value`, {
-    headers: { apikey: SUPABASE_KEY }
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
   });
   if(!res.ok) throw new Error('sb GET '+res.status);
   const rows = await res.json();
@@ -374,7 +374,7 @@ async function sbGet(key){
 async function sbSet(key, value){
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${SB_TABLE}?on_conflict=key`, {
     method:'POST',
-    headers: { apikey: SUPABASE_KEY, 'Content-Type':'application/json', Prefer:'resolution=merge-duplicates,return=minimal' },
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type':'application/json', Prefer:'resolution=merge-duplicates,return=minimal' },
     body: JSON.stringify([{ key, value }])
   });
   if(!res.ok) throw new Error('sb SET '+res.status);
@@ -382,10 +382,19 @@ async function sbSet(key, value){
 }
 async function testSupabase(){
   try{
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/${SB_TABLE}?limit=1`, { headers:{ apikey:SUPABASE_KEY } });
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${SB_TABLE}?limit=1`, { headers:{ apikey:SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } });
     if(!res.ok) return false;
     return true; // any real HTTP response means the network path works
   }catch(e){ return false; }
+}
+async function diagnoseSupabase(){
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${SB_TABLE}?limit=1`, { headers:{ apikey:SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } });
+    const text = await res.text();
+    return `GET статус: ${res.status} ${res.statusText}\nОтвет: ${text.slice(0,500)}`;
+  }catch(e){
+    return `Сетевая ошибка (запрос не дошёл до сервера): ${e.message}`;
+  }
 }
 
 async function loadKey(key, fallback){
@@ -1123,6 +1132,8 @@ function openSettingsModal(){
   const html = `
     <div class="modal-title">Настройки и резервная копия</div>
     <p class="hint" style="margin-bottom:14px;">Хранилище сейчас: <b style="color:var(--text)">${modeText}</b></p>
+    <button class="btn" id="diagBtn" style="width:100%; margin-bottom:6px;">Проверить соединение с Supabase</button>
+    <pre id="diagOut" class="hint" style="white-space:pre-wrap; background:var(--surface2); border-radius:8px; padding:10px; margin-bottom:14px; display:none;"></pre>
     <div class="backup-row">
       <button class="btn btn-primary" id="exportBtn">${icon('download')} Скачать резервную копию (JSON)</button>
       <p class="hint">Сохрани файл в папку на компьютере, которая синхронизируется с Яндекс.Диском — он сам загрузится в облако. Так данные не зависят от хранилища Claude.</p>
@@ -1135,6 +1146,11 @@ function openSettingsModal(){
   openModal(html, root => {
     $('#exportBtn', root).addEventListener('click', exportBackup);
     $('#importInput', root).addEventListener('change', importBackup);
+    $('#diagBtn', root).addEventListener('click', async ()=>{
+      const out = $('#diagOut', root);
+      out.style.display = 'block'; out.textContent = 'Проверяю…';
+      out.textContent = await diagnoseSupabase();
+    });
   });
 }
 function exportBackup(){
