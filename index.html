@@ -653,6 +653,10 @@ function openTaskModal({ type, date, list, task=null }){
   });
 }
 function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function renamePrompt(current){
+  const val = prompt('Новое название', current);
+  return (val && val.trim()) ? val.trim() : null;
+}
 
 /* ============================= TASK ROW RENDER ============================= */
 function taskRowHTML(t){
@@ -802,7 +806,7 @@ function renderTasks(){
     return `
     <div class="kanban-col">
       <div class="kanban-col-head">
-        <b>${escapeHtml(l.name)}</b>
+        <b data-listrename="${l.id}" style="cursor:pointer">${escapeHtml(l.name)}</b>
         <div class="row-gap" style="align-items:center; gap:6px;">
           <span class="kc-count">${items.length}</span>
           ${!l.builtin ? `<button class="delbtn" data-listdel="${l.id}">${icon('x')}</button>` : ''}
@@ -833,6 +837,11 @@ function renderTasks(){
     state.tasks.forEach(tsk => { if(tsk.list===id){ tsk.list='inbox'; if(tsk.type!=='work'&&tsk.type!=='home') tsk.type=null; } });
     state.lists = state.lists.filter(l=>l.id!==id);
     persistTasks(); renderTasks();
+  }));
+  $$('[data-listrename]', board).forEach(el => el.addEventListener('click', ()=>{
+    const l = state.lists.find(x=>x.id===el.dataset.listrename);
+    const newName = renamePrompt(l.name);
+    if(newName){ l.name = newName; persistTasks(); renderTasks(); }
   }));
   $('#addListBtn').addEventListener('click', ()=>{
     const name = prompt('Название списка');
@@ -1011,7 +1020,7 @@ function renderHabits(){
       return `
       <div class="habitcard">
         <div class="habithead">
-          <b>${escapeHtml(h.name)}</b>
+          <b data-hrename="${h.id}" style="cursor:pointer">${escapeHtml(h.name)}</b>
           <div class="row-gap" style="align-items:center;">
             <span class="streak">🔥 ${habitStreak(h)}</span>
             <button class="delbtn" data-hdel="${h.id}">${icon('x')}</button>
@@ -1036,6 +1045,11 @@ function renderHabits(){
     $$('[data-hdel]', listEl).forEach(b => b.addEventListener('click', ()=>{
       state.habits = state.habits.filter(h=>h.id!==b.dataset.hdel);
       persistHabits(); renderHabits();
+    }));
+    $$('[data-hrename]', listEl).forEach(el => el.addEventListener('click', ()=>{
+      const h = state.habits.find(x=>x.id===el.dataset.hrename);
+      const newName = renamePrompt(h.name);
+      if(newName){ h.name = newName; persistHabits(); renderHabits(); }
     }));
   }
   $('#habitAdd').addEventListener('click', ()=>{
@@ -1094,7 +1108,7 @@ function renderSport(){
       return `
       <div class="exercard">
         <div class="exer-top">
-          <div class="exer-name">${escapeHtml(ex.name)}</div>
+          <div class="exer-name" data-exrename="${ex.id}" style="cursor:pointer">${escapeHtml(ex.name)}</div>
           <button class="delbtn" data-exdel="${ex.id}">${icon('x')}</button>
         </div>
         <div class="exer-total">${total}<span> повторений сегодня</span></div>
@@ -1120,6 +1134,11 @@ function renderSport(){
     $$('[data-exdel]', exerEl).forEach(b => b.addEventListener('click', ()=>{
       state.exercises = state.exercises.filter(e=>e.id!==b.dataset.exdel);
       persistSport(); renderSport();
+    }));
+    $$('[data-exrename]', exerEl).forEach(el => el.addEventListener('click', ()=>{
+      const ex = state.exercises.find(x=>x.id===el.dataset.exrename);
+      const newName = renamePrompt(ex.name);
+      if(newName){ ex.name = newName; persistSport(); renderSport(); }
     }));
   }
   if(state.exercises.length<5){
