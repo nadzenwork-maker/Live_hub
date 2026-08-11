@@ -31,7 +31,10 @@
     --radius:16px;
     --radius-sm:10px;
     --shadow:0 1px 3px rgba(30,35,45,.06), 0 1px 2px rgba(30,35,45,.04);
+    --app-max:520px;
   }
+  @media (min-width:700px){ :root{ --app-max:820px; } }
+  @media (min-width:1100px){ :root{ --app-max:1040px; } }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{height:100%;}
   body{
@@ -46,7 +49,7 @@
   input,textarea,select{font-family:inherit; font-size:15px;}
   ::selection{background:var(--work); color:#1E1A22;}
 
-  #app{max-width:520px; margin:0 auto; min-height:100dvh; display:flex; flex-direction:column; position:relative;}
+  #app{max-width:var(--app-max); margin:0 auto; min-height:100dvh; display:flex; flex-direction:column; position:relative; transition:max-width .2s;}
 
   header.top{
     position:sticky; top:0; z-index:20;
@@ -129,7 +132,7 @@
     border-top:1px solid var(--border);
     padding:8px 4px calc(6px + env(safe-area-inset-bottom));
   }
-  nav.bottom .navwrap{max-width:520px; margin:0 auto; display:flex; justify-content:space-around;}
+  nav.bottom .navwrap{max-width:var(--app-max); margin:0 auto; display:flex; justify-content:space-around;}
   .navbtn{background:none; border:none; display:flex; flex-direction:column; align-items:center; gap:3px; color:var(--text-faint); padding:4px 2px; width:60px;}
   .navbtn svg{width:21px; height:21px; transition:.15s;}
   .navbtn span{font-size:10px; font-weight:700;}
@@ -205,7 +208,7 @@
   .modal-backdrop{position:fixed; inset:0; background:rgba(10,8,12,.6); z-index:50; display:flex; align-items:flex-end; opacity:0; pointer-events:none; transition:.2s; overscroll-behavior:none;}
   .modal-backdrop.open{opacity:1; pointer-events:auto;}
   .modal-sheet{
-    background:var(--surface); width:100%; max-width:520px; margin:0 auto; border-radius:20px 20px 0 0;
+    background:var(--surface); width:100%; max-width:min(var(--app-max), 640px); margin:0 auto; border-radius:20px 20px 0 0;
     max-height:88dvh; overflow-y:auto; padding:16px 18px calc(20px + env(safe-area-inset-bottom));
     transform:translateY(100%); transition:.25s cubic-bezier(.32,.72,0,1);
     box-shadow:0 -4px 24px rgba(30,35,45,.12);
@@ -272,6 +275,19 @@
   /* ---- habit month heatmap ---- */
   .habit-stats{font-size:12px; color:var(--habit); font-weight:700; margin-bottom:8px;}
   .habit-months-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px 10px; margin-top:10px;}
+
+  /* ---- desktop layout ---- */
+  .day-top-grid, .day-bottom-grid, .sport-exer-grid, .goals-grid{ display:block; }
+  @media (min-width:700px){
+    .day-top-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:0 24px; align-items:start; }
+    .day-top-grid .section-title{ margin-top:6px; }
+    .day-bottom-grid{ display:grid; grid-template-columns:1fr 1fr; gap:0 24px; align-items:start; }
+    .sport-exer-grid{ display:grid; grid-template-columns:1fr 1fr; gap:0 16px; }
+    .goals-grid{ display:grid; grid-template-columns:1fr 1fr; gap:0 24px; align-items:start; }
+    main{ padding-left:24px; padding-right:24px; }
+    header.top{ padding-left:24px; padding-right:24px; }
+    .kanban-board{ margin-left:-24px; margin-right:-24px; padding-left:24px; padding-right:24px; }
+  }
   .heat-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:4px;}
   .heat-cell{aspect-ratio:1; border-radius:6px; border:1.5px solid var(--border); background:transparent;}
   .heat-cell.done{background:var(--habit); border-color:var(--habit);}
@@ -806,41 +822,55 @@ function renderDay(){
   const entry = state.journal.find(j=>j.date===t);
 
   const html = `
-    <div class="section-title" style="margin-top:6px">
-      <h2><span class="accent-dot" style="background:var(--work)"></span>Работа</h2>
-      <span class="count">${work.length}</span>
-    </div>
-    <div class="slotlist" id="workSlots"></div>
+    <div class="day-top-grid">
+      <div>
+        <div class="section-title" style="margin-top:6px">
+          <h2><span class="accent-dot" style="background:var(--work)"></span>Работа</h2>
+          <span class="count">${work.length}</span>
+        </div>
+        <div class="slotlist" id="workSlots"></div>
+      </div>
 
-    <div class="section-title">
-      <h2><span class="accent-dot" style="background:var(--home)"></span>Дом</h2>
-      <span class="count">${home.length}</span>
-    </div>
-    <div class="slotlist" id="homeSlots"></div>
+      <div>
+        <div class="section-title" style="margin-top:6px">
+          <h2><span class="accent-dot" style="background:var(--home)"></span>Дом</h2>
+          <span class="count">${home.length}</span>
+        </div>
+        <div class="slotlist" id="homeSlots"></div>
+      </div>
 
-    <div class="section-title">
-      <h2>
-        <input type="color" id="otherColorPicker" value="${state.otherColor}" style="width:11px; height:11px; padding:0; border:none; border-radius:50%; margin-right:7px; vertical-align:middle; cursor:pointer;">
-        Другое
-      </h2>
-      <span class="count">${other.length}</span>
+      <div>
+        <div class="section-title" style="margin-top:6px">
+          <h2>
+            <input type="color" id="otherColorPicker" value="${state.otherColor}" style="width:11px; height:11px; padding:0; border:none; border-radius:50%; margin-right:7px; vertical-align:middle; cursor:pointer;">
+            Другое
+          </h2>
+          <span class="count">${other.length}</span>
+        </div>
+        <div class="slotlist" id="otherSlots"></div>
+      </div>
     </div>
-    <div class="slotlist" id="otherSlots"></div>
 
     <div class="quickadd" style="margin-top:6px;">
       <input type="text" id="dayInboxInput" placeholder="Мысль на бегу → во «Входящие»">
       <button id="dayInboxAdd">${icon('plus')}</button>
     </div>
 
-    <div class="section-title"><h2><span class="accent-dot" style="background:var(--habit)"></span>Привычки сегодня</h2></div>
-    <div class="card" id="dayHabits"></div>
+    <div class="day-bottom-grid">
+      <div>
+        <div class="section-title"><h2><span class="accent-dot" style="background:var(--habit)"></span>Привычки сегодня</h2></div>
+        <div class="card" id="dayHabits"></div>
+      </div>
 
-    <div class="section-title"><h2><span class="accent-dot" style="background:var(--journal)"></span>Дневник</h2></div>
-    <div class="card journal-embed">
-      <div class="stars" id="starsToday"></div>
-      <div class="photo-row" id="photoRow"></div>
-      <textarea class="journal-ta" id="journalTa" placeholder="Как прошёл день?">${entry?escapeHtml(entry.text):''}</textarea>
-      <button class="btn btn-primary" id="journalSave" style="background:var(--journal); color:#1E1A22; margin-top:10px; width:100%;">Сохранить</button>
+      <div>
+        <div class="section-title"><h2><span class="accent-dot" style="background:var(--journal)"></span>Дневник</h2></div>
+        <div class="card journal-embed">
+          <div class="stars" id="starsToday"></div>
+          <div class="photo-row" id="photoRow"></div>
+          <textarea class="journal-ta" id="journalTa" placeholder="Как прошёл день?">${entry?escapeHtml(entry.text):''}</textarea>
+          <button class="btn btn-primary" id="journalSave" style="background:var(--journal); color:#1E1A22; margin-top:10px; width:100%;">Сохранить</button>
+        </div>
+      </div>
     </div>
   `;
   $('#tab-day').innerHTML = html;
@@ -1274,27 +1304,35 @@ function buildMonthCells(key){
   while(cells.length % 7 !== 0) cells.push({ day: cells.length, faded:true });
   return cells;
 }
-let habitsMonthsShown = 3;
 function renderHabits(){
+  const [y,m] = habitsMonthCursor.split('-').map(Number);
+  const cells = buildMonthCells(habitsMonthCursor);
   const t = todayISO();
-  const monthKeys = [];
-  let cursor = monthKey(t);
-  for(let i=0; i<habitsMonthsShown; i++){ monthKeys.push(cursor); cursor = shiftMonth(cursor,-1); }
 
   const html = `
     <div class="quickadd" style="margin-top:4px">
       <input type="text" id="habitInput" placeholder="Новая привычка">
       <button id="habitAdd">${icon('plus')}</button>
     </div>
+    <div class="cal-header">
+      <button class="cal-nav" id="hmPrev">${icon('chevLeft')}</button>
+      <h2>${MONTHS_NOM[m-1]} ${y}</h2>
+      <button class="cal-nav" id="hmNext">${icon('chevRight')}</button>
+    </div>
     <div id="habitList"></div>
-    ${state.habits.length ? `<button class="btn" id="habitsMoreBtn" style="width:100%; margin-top:8px;">Показать ещё месяцев</button>` : ''}
   `;
   $('#tab-habits').innerHTML = html;
+  $('#hmPrev').addEventListener('click', ()=>{ habitsMonthCursor = shiftMonth(habitsMonthCursor,-1); renderHabits(); });
+  $('#hmNext').addEventListener('click', ()=>{ habitsMonthCursor = shiftMonth(habitsMonthCursor,1); renderHabits(); });
 
   const listEl = $('#habitList');
   if(!state.habits.length){ listEl.innerHTML = `<div class="empty">Добавь первую привычку выше</div>`; }
   else {
-    listEl.innerHTML = state.habits.map(h => `
+    listEl.innerHTML = state.habits.map(h => {
+      const elapsed = cells.filter(c=>!c.faded && c.iso<=t);
+      const done = elapsed.filter(c=>state.habitEntries[`${h.id}_${c.iso}`]).length;
+      const pct = elapsed.length ? Math.round(done/elapsed.length*100) : 0;
+      return `
       <div class="habitcard">
         <div class="habithead">
           <b data-hrename="${h.id}" style="cursor:pointer">${escapeHtml(h.name)}</b>
@@ -1303,11 +1341,17 @@ function renderHabits(){
             <button class="delbtn" data-hdel="${h.id}">${icon('x')}</button>
           </div>
         </div>
-        <div class="habit-months-grid">
-          ${monthKeys.map(mk => habitMonthBlockHTML(h, mk, t)).join('')}
+        <div class="habit-stats">${elapsed.length ? `${done}/${elapsed.length} дней · ${pct}% · пропущено ${elapsed.length-done}` : 'пока нет данных за месяц'}</div>
+        <div class="heat-grid">
+          ${cells.map(c => {
+            if(c.faded) return `<div class="heat-cell faded"></div>`;
+            const isDone = !!state.habitEntries[`${h.id}_${c.iso}`];
+            const future = c.iso > t;
+            return `<button class="heat-cell ${isDone?'done':''} ${future?'future':''}" data-hid="${h.id}" data-date="${c.iso}" ${future?'disabled':''} title="${c.day}"></button>`;
+          }).join('')}
         </div>
-      </div>`
-    ).join('');
+      </div>`;
+    }).join('');
     $$('[data-hid]', listEl).forEach(b => b.addEventListener('click', ()=>{
       const key = `${b.dataset.hid}_${b.dataset.date}`;
       if(state.habitEntries[key]) delete state.habitEntries[key]; else state.habitEntries[key]=true;
@@ -1329,29 +1373,6 @@ function renderHabits(){
     inp.value=''; persistHabits(); renderHabits();
   });
   $('#habitInput').addEventListener('keydown', e=>{ if(e.key==='Enter') $('#habitAdd').click(); });
-  const moreBtn = $('#habitsMoreBtn');
-  if(moreBtn) moreBtn.addEventListener('click', ()=>{ habitsMonthsShown += 3; renderHabits(); });
-}
-function habitMonthBlockHTML(h, mk, t){
-  const [y,m] = mk.split('-').map(Number);
-  const cells = buildMonthCells(mk);
-  const elapsed = cells.filter(c=>!c.faded && c.iso<=t);
-  const done = elapsed.filter(c=>state.habitEntries[`${h.id}_${c.iso}`]).length;
-  const pct = elapsed.length ? Math.round(done/elapsed.length*100) : 0;
-  return `
-    <div>
-      <div style="font-size:12px; font-weight:700; color:var(--text-muted); margin-bottom:4px;">${MONTHS_NOM[m-1]} ${y}</div>
-      <div class="habit-stats" style="font-size:11px; margin-bottom:6px;">${elapsed.length ? `${done}/${elapsed.length} · ${pct}%` : 'нет данных'}</div>
-      <div class="heat-grid">
-        ${cells.map(c => {
-          if(c.faded) return `<div class="heat-cell faded"></div>`;
-          const isDone = !!state.habitEntries[`${h.id}_${c.iso}`];
-          const future = c.iso > t;
-          return `<button class="heat-cell ${isDone?'done':''} ${future?'future':''}" data-hid="${h.id}" data-date="${c.iso}" ${future?'disabled':''} title="${c.day}"></button>`;
-        }).join('')}
-      </div>
-    </div>
-  `;
 }
 
 /* ============================= SPORT TAB ============================= */
@@ -1360,7 +1381,7 @@ function renderSport(){
   const html = `
     <button class="btn" id="sportStatsBtn" style="width:100%; margin-top:6px; margin-bottom:14px; display:flex; align-items:center; justify-content:center; gap:8px;">${icon('calendar')} Статистика</button>
     <div class="section-title" style="margin-top:0"><h2>Упражнения</h2><span class="count">${state.exercises.length}/5</span></div>
-    <div id="exerList"></div>
+    <div id="exerList" class="sport-exer-grid"></div>
     ${state.exercises.length<5 ? `<div class="quickadd"><input type="text" id="exerInput" placeholder="Новое упражнение"><button id="exerAdd">${icon('plus')}</button></div>` : ''}
 
     <div class="section-title"><h2>Тренировки</h2></div>
@@ -1629,29 +1650,34 @@ function renderGoals(){
   const [y,m] = goalsMonthCursor.split('-').map(Number);
 
   const html = `
-    <div class="cal-header">
-      <button class="cal-nav" id="gmPrev">${icon('chevLeft')}</button>
-      <h2>${MONTHS_NOM[m-1]} ${y}</h2>
-      <button class="cal-nav" id="gmNext">${icon('chevRight')}</button>
-    </div>
-    <div class="quickadd"><input type="text" id="gmInput" placeholder="Цель на месяц"><button id="gmAdd">${icon('plus')}</button></div>
-    <div id="gmList" style="margin-bottom:8px"></div>
+    <div class="goals-grid">
+      <div>
+        <div class="cal-header">
+          <button class="cal-nav" id="gmPrev">${icon('chevLeft')}</button>
+          <h2>${MONTHS_NOM[m-1]} ${y}</h2>
+          <button class="cal-nav" id="gmNext">${icon('chevRight')}</button>
+        </div>
+        <div class="quickadd"><input type="text" id="gmInput" placeholder="Цель на месяц"><button id="gmAdd">${icon('plus')}</button></div>
+        <div id="gmList" style="margin-bottom:8px"></div>
+      </div>
 
-    <div class="section-title" style="margin-top:28px"></div>
-    <div class="cal-header">
-      <button class="cal-nav" id="gwPrev">${icon('chevLeft')}</button>
-      <h2>${weekLabel(goalsWeekCursor)}</h2>
-      <button class="cal-nav" id="gwNext">${icon('chevRight')}</button>
+      <div>
+        <div class="cal-header">
+          <button class="cal-nav" id="gwPrev">${icon('chevLeft')}</button>
+          <h2>${weekLabel(goalsWeekCursor)}</h2>
+          <button class="cal-nav" id="gwNext">${icon('chevRight')}</button>
+        </div>
+        <div class="quickadd"><input type="text" id="gwInput" placeholder="Цель на неделю"></div>
+        <div class="field" style="margin-bottom:8px">
+          <select id="gwLink">
+            <option value="">Без связи с целью месяца</option>
+            ${monthGoals.map(g=>`<option value="${g.id}">${escapeHtml(g.text)}</option>`).join('')}
+          </select>
+        </div>
+        <button class="btn btn-primary" id="gwAdd" style="background:var(--goal); width:100%; margin-bottom:12px;">Добавить недельную цель</button>
+        <div id="gwList"></div>
+      </div>
     </div>
-    <div class="quickadd"><input type="text" id="gwInput" placeholder="Цель на неделю"></div>
-    <div class="field" style="margin-bottom:8px">
-      <select id="gwLink">
-        <option value="">Без связи с целью месяца</option>
-        ${monthGoals.map(g=>`<option value="${g.id}">${escapeHtml(g.text)}</option>`).join('')}
-      </select>
-    </div>
-    <button class="btn btn-primary" id="gwAdd" style="background:var(--goal); width:100%; margin-bottom:12px;">Добавить недельную цель</button>
-    <div id="gwList"></div>
   `;
   $('#tab-goals').innerHTML = html;
 
