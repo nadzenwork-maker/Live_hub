@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Хаб</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F7F8FA;
+    --surface:#FFFFFF;
+    --surface2:#F0F2F5;
+    --border:#E3E6EA;
+    --text:#2E3238;
+    --text-muted:#767C85;
+    --text-faint:#A8AEB6;
+    --work:#D68A3A;
+    --work-dim:#FBF0DE;
+    --home:#CD7C60;
+    --home-dim:#FAEAE3;
+    --habit:#6FA36A;
+    --habit-dim:#E7F3E5;
+    --sport:#4E93B8;
+    --sport-dim:#E5F2F8;
+    --journal:#C17998;
+    --journal-dim:#F8E9EF;
+    --goal:#9077BB;
+    --goal-dim:#F1ECFA;
+    --danger:#C55F52;
+    --radius:16px;
+    --radius-sm:10px;
+    --shadow:0 1px 3px rgba(30,35,45,.06), 0 1px 2px rgba(30,35,45,.04);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:'Inter',system-ui,sans-serif;
+    font-size:15px; line-height:1.45;
+    overscroll-behavior-y:none;
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  h1,h2,h3,.mn{font-family:'Manrope',system-ui,sans-serif;}
+  button{font-family:inherit; cursor:pointer;}
+  input,textarea,select{font-family:inherit; font-size:15px;}
+  ::selection{background:var(--work); color:#1E1A22;}
+
+  #app{max-width:520px; margin:0 auto; min-height:100dvh; display:flex; flex-direction:column; position:relative;}
+
+  header.top{
+    position:sticky; top:0; z-index:20;
+    background:linear-gradient(180deg, var(--bg) 70%, rgba(30,26,34,0));
+    padding:18px 18px 10px;
+  }
+  header.top .date{color:var(--text-faint); font-size:12.5px; text-transform:uppercase; letter-spacing:.08em; margin-bottom:2px;}
+  header.top h1{font-size:22px; margin:0; font-weight:800;}
+
+  main{flex:1; padding:0 14px 100px; overflow-x:hidden;}
+  .tabpanel{display:none; animation:fadeIn .25s ease;}
+  .tabpanel.active{display:block;}
+  @keyframes fadeIn{from{opacity:0; transform:translateY(4px)} to{opacity:1; transform:translateY(0)}}
+
+  /* ---- cards / sections ---- */
+  .card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px; margin-bottom:12px; box-shadow:var(--shadow);}
+  .section-title{display:flex; align-items:center; justify-content:space-between; margin:22px 4px 10px;}
+  .section-title h2{font-size:14px; margin:0; text-transform:uppercase; letter-spacing:.07em; color:var(--text-muted); font-weight:700;}
+  .section-title .count{font-size:12px; color:var(--text-faint); font-weight:600;}
+  .accent-dot{width:7px; height:7px; border-radius:50%; display:inline-block; margin-right:7px;}
+
+  /* ---- slots / task rows (signature: ruled list) ---- */
+  .slotlist{border-left:2px dashed var(--border); padding-left:12px; margin-left:2px;}
+  .taskrow{
+    display:flex; align-items:flex-start; gap:10px; padding:10px 0;
+    border-bottom:1px dashed var(--border);
+  }
+  .taskrow:last-child{border-bottom:none;}
+  .checkbox{
+    width:20px; height:20px; border-radius:50%; border:2px solid var(--text-faint);
+    flex:0 0 20px; margin-top:1px; display:flex; align-items:center; justify-content:center;
+    transition:.15s; background:transparent;
+  }
+  .checkbox.done{background:var(--work); border-color:var(--work); color:#fff;}
+  .checkbox.done.home{background:var(--home); border-color:var(--home);}
+  .checkbox svg{width:12px; height:12px; opacity:0; transition:.15s;}
+  .checkbox.done svg{opacity:1;}
+  .taskbody{flex:1; min-width:0;}
+  .tasktext{font-size:15px; word-break:break-word;}
+  .tasktext.done{color:var(--text-faint); text-decoration:line-through;}
+  .taskmeta{display:flex; flex-wrap:wrap; gap:6px; margin-top:5px;}
+  .chip{font-size:11px; padding:2px 8px; border-radius:20px; background:var(--surface2); color:var(--text-muted); font-weight:600;}
+  .chip.sub{background:transparent; border:1px solid var(--border);}
+  .delbtn{background:none; border:none; color:var(--text-faint); padding:4px; flex:0 0 auto;}
+  .addslot{
+    display:flex; align-items:center; gap:10px; padding:10px 0; color:var(--text-faint);
+    border-bottom:1px dashed var(--border); background:none; border-left:none; border-right:none; border-top:none;
+    width:100%; text-align:left; font-size:15px;
+  }
+  .addslot:last-child{border-bottom:none;}
+  .addslot .plusring{width:20px; height:20px; border-radius:50%; border:2px dashed var(--text-faint); flex:0 0 20px; display:flex; align-items:center; justify-content:center; font-size:13px;}
+
+  /* ---- inbox ---- */
+  .inbox-toggle{width:100%; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:12px 14px; display:flex; justify-content:space-between; align-items:center; color:var(--text); margin-bottom:12px;}
+  .inbox-body{display:none;}
+  .inbox-body.open{display:block;}
+  .inbox-tabs{display:flex; gap:8px; margin:10px 0 8px;}
+  .pill{padding:6px 14px; border-radius:20px; font-size:13px; font-weight:700; border:1px solid var(--border); background:var(--surface); color:var(--text-muted);}
+  .pill.active.work{background:var(--work-dim); color:var(--work); border-color:var(--work);}
+  .pill.active.home{background:var(--home-dim); color:var(--home); border-color:var(--home);}
+  .quickadd{display:flex; gap:8px; margin-bottom:8px;}
+  .quickadd input{flex:1; background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:9px 12px; color:var(--text);}
+  .quickadd button{background:var(--work); border:none; border-radius:var(--radius-sm); padding:0 14px; color:#1E1A22; font-weight:800;}
+  .inboxrow{display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px dashed var(--border);}
+  .inboxrow span{flex:1; font-size:14px;}
+  .iconbtn{background:var(--surface2); border:1px solid var(--border); border-radius:8px; width:30px; height:30px; display:flex; align-items:center; justify-content:center; color:var(--text-muted); flex:0 0 auto;}
+
+  /* ---- buttons generic ---- */
+  .btn{background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px 14px; color:var(--text); font-weight:700; font-size:14px;}
+  .btn-primary{background:var(--work); color:#1E1A22; border:none;}
+  .btn.small{padding:6px 10px; font-size:12.5px;}
+  .row-gap{display:flex; gap:8px; flex-wrap:wrap;}
+
+  /* ---- bottom nav ---- */
+  nav.bottom{
+    position:fixed; bottom:0; left:0; right:0; z-index:30;
+    background:rgba(255,255,255,.9); backdrop-filter:blur(14px);
+    border-top:1px solid var(--border);
+    padding:8px 4px calc(6px + env(safe-area-inset-bottom));
+  }
+  nav.bottom .navwrap{max-width:520px; margin:0 auto; display:flex; justify-content:space-around;}
+  .navbtn{background:none; border:none; display:flex; flex-direction:column; align-items:center; gap:3px; color:var(--text-faint); padding:4px 2px; width:60px;}
+  .navbtn svg{width:21px; height:21px; transition:.15s;}
+  .navbtn span{font-size:10px; font-weight:700;}
+  .navbtn.active{color:var(--text);}
+  .navbtn.active svg{transform:translateY(-1px);}
+
+  /* ---- calendar ---- */
+  .cal-header{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;}
+  .cal-header h2{font-size:17px; margin:0; font-weight:800;}
+  .cal-nav{background:var(--surface); border:1px solid var(--border); width:34px; height:34px; border-radius:50%; color:var(--text); display:flex; align-items:center; justify-content:center;}
+  .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:5px;}
+  .cal-dow{text-align:center; font-size:11px; color:var(--text-faint); font-weight:700; padding-bottom:4px;}
+  .cal-cell{aspect-ratio:1; border-radius:11px; background:var(--surface); border:1px solid var(--border); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; font-size:13px; position:relative; color:var(--text-muted); box-shadow:var(--shadow);}
+  .cal-cell.faded{opacity:.28;}
+  .cal-cell.today{border-color:var(--work); color:var(--text); font-weight:800;}
+  .cal-dots{display:flex; gap:2px; position:absolute; bottom:5px;}
+  .cal-dots i{width:4.5px; height:4.5px; border-radius:50%; display:block;}
+
+  /* ---- habits ---- */
+  .habitcard{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:12px 14px; margin-bottom:10px; box-shadow:var(--shadow);}
+  .habithead{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;}
+  .habithead b{font-size:15px;}
+  .streak{font-size:11.5px; color:var(--habit); font-weight:700;}
+  .weekstrip{display:flex; justify-content:space-between;}
+  .daydot-wrap{display:flex; flex-direction:column; align-items:center; gap:5px;}
+  .daydot-wrap .lbl{font-size:10px; color:var(--text-faint); font-weight:700;}
+  .daydot{width:30px; height:30px; border-radius:50%; border:2px solid var(--border); background:transparent;}
+  .daydot.done{background:var(--habit); border-color:var(--habit);}
+  .daydot.future{opacity:.3;}
+
+  /* ---- sport ---- */
+  .exercard{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px; margin-bottom:10px; box-shadow:var(--shadow);}
+  .exer-top{display:flex; justify-content:space-between; align-items:flex-start;}
+  .exer-name{font-weight:700; font-size:15px;}
+  .exer-total{font-size:26px; font-weight:800; color:var(--sport); font-family:'Manrope';}
+  .exer-total span{font-size:12px; color:var(--text-faint); font-weight:600;}
+  .quickreps{display:flex; gap:6px; margin:10px 0 8px;}
+  .qr-btn{background:var(--sport-dim); color:var(--sport); border:1px solid var(--sport); border-radius:20px; padding:6px 13px; font-weight:800; font-size:13px;}
+  .customrep{display:flex; gap:6px;}
+  .customrep input{width:70px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:7px 10px; color:var(--text);}
+  .setschips{display:flex; flex-wrap:wrap; gap:5px; margin-top:8px;}
+  .setschip{background:var(--surface2); border:1px solid var(--border); border-radius:20px; padding:3px 10px; font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:5px;}
+  .setschip button{background:none; border:none; color:var(--text-faint); font-size:12px; padding:0;}
+
+  .minirow{display:flex; justify-content:space-between; align-items:flex-start; padding:10px 0; border-bottom:1px dashed var(--border);}
+  .minirow:last-child{border-bottom:none;}
+  .minirow .l{font-weight:700; font-size:14px;}
+  .minirow .r{font-size:12px; color:var(--text-faint); margin-top:2px;}
+
+  /* ---- journal ---- */
+  .stars{display:flex; gap:6px; margin-bottom:10px;}
+  .star{width:30px; height:30px; color:var(--border);}
+  .star.on{color:var(--journal);}
+  textarea.journal-ta{width:100%; min-height:90px; background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px 12px; color:var(--text); resize:vertical;}
+  .journal-hist-row{padding:10px 0; border-bottom:1px dashed var(--border);}
+  .journal-hist-row .jhd{display:flex; justify-content:space-between; align-items:center;}
+  .journal-hist-row .jhdate{font-size:12.5px; color:var(--text-faint); font-weight:700;}
+  .journal-hist-row .jhstars{color:var(--journal); font-size:12px;}
+  .journal-hist-row p{margin:5px 0 0; font-size:13.5px; color:var(--text-muted);}
+
+  /* ---- goals ---- */
+  .goalrow{display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px dashed var(--border);}
+  .goalrow:last-child{border-bottom:none;}
+  .goalrow .gtext{flex:1; font-size:14.5px;}
+  .goalrow .gtext.done{color:var(--text-faint); text-decoration:line-through;}
+  .goal-link-tag{font-size:10.5px; color:var(--goal); background:var(--goal-dim); padding:2px 7px; border-radius:10px; margin-top:4px; display:inline-block;}
+
+  /* ---- empty state ---- */
+  .empty{text-align:center; padding:26px 10px; color:var(--text-faint); font-size:13.5px;}
+
+  /* ---- modal ---- */
+  .modal-backdrop{position:fixed; inset:0; background:rgba(10,8,12,.6); z-index:50; display:flex; align-items:flex-end; opacity:0; pointer-events:none; transition:.2s;}
+  .modal-backdrop.open{opacity:1; pointer-events:auto;}
+  .modal-sheet{
+    background:var(--surface); width:100%; max-width:520px; margin:0 auto; border-radius:20px 20px 0 0;
+    max-height:88dvh; overflow-y:auto; padding:16px 18px calc(20px + env(safe-area-inset-bottom));
+    transform:translateY(100%); transition:.25s cubic-bezier(.32,.72,0,1);
+    box-shadow:0 -4px 24px rgba(30,35,45,.12);
+  }
+  .modal-backdrop.open .modal-sheet{transform:translateY(0);}
+  .modal-handle{width:36px; height:4px; background:var(--border); border-radius:3px; margin:0 auto 14px;}
+  .modal-title{font-size:17px; font-weight:800; margin-bottom:14px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block; font-size:11.5px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.06em; font-weight:700; margin-bottom:6px;}
+  .field input[type=text], .field input[type=date], .field input[type=number], .field textarea, .field select{
+    width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px 12px; color:var(--text);
+  }
+  .field textarea{min-height:70px; resize:vertical;}
+  .subtask-row{display:flex; align-items:center; gap:8px; margin-bottom:6px;}
+  .subtask-row input[type=text]{flex:1;}
+  .modal-actions{display:flex; gap:10px; margin-top:18px;}
+  .modal-actions .btn{flex:1; text-align:center;}
+
+  /* ---- header extras: sync badge + settings ---- */
+  .header-top-row{display:flex; align-items:center; justify-content:space-between;}
+  .header-actions{display:flex; align-items:center; gap:8px;}
+  .sync-badge{display:flex; align-items:center; gap:5px; font-size:10.5px; color:var(--text-faint); font-weight:700;}
+  .sync-dot{width:7px; height:7px; border-radius:50%; background:var(--habit);}
+  .sync-badge.saving .sync-dot{background:var(--work); animation:pulse 1s infinite;}
+  .sync-badge.error{color:var(--danger); cursor:pointer;}
+  .sync-badge.error .sync-dot{background:var(--danger);}
+  @keyframes pulse{50%{opacity:.3}}
+  .gearbtn{background:var(--surface); border:1px solid var(--border); width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--text-muted); flex:0 0 auto;}
+  .gearbtn svg{width:15px; height:15px;}
+
+  /* ---- kanban / tasks board ---- */
+  .kanban-board{display:flex; gap:10px; overflow-x:auto; padding:2px 14px 14px; margin:0 -14px; -webkit-overflow-scrolling:touch;}
+  .kanban-col{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:12px; min-width:230px; max-width:230px; flex:0 0 auto; display:flex; flex-direction:column; box-shadow:var(--shadow);}
+  .kanban-col-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
+  .kanban-col-head b{font-size:13.5px;}
+  .kanban-col-head .kc-count{font-size:11px; color:var(--text-faint); font-weight:700;}
+  .kanban-quickadd{display:flex; gap:6px; margin-bottom:10px;}
+  .kanban-quickadd input{flex:1; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:7px 9px; color:var(--text); font-size:13px;}
+  .kanban-quickadd button{background:var(--surface2); border:1px solid var(--border); border-radius:8px; width:30px; color:var(--text-muted); flex:0 0 auto;}
+  .kanban-cards{overflow-y:auto; max-height:60vh;}
+  .kcard{background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:9px 10px; margin-bottom:7px; display:flex; gap:8px; align-items:flex-start;}
+  .kcard .kctext{font-size:13px; flex:1; word-break:break-word;}
+  .kcard .kctext.done{color:var(--text-faint); text-decoration:line-through;}
+  .kcard .kcmeta{display:flex; flex-wrap:wrap; gap:4px; margin-top:5px;}
+  .kanban-addcol{min-width:170px; max-width:170px; flex:0 0 auto; background:transparent; border:2px dashed var(--border); border-radius:var(--radius); color:var(--text-faint); font-size:13px; font-weight:700;}
+
+  /* ---- day sheet extras ---- */
+  .habit-check-row{display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px dashed var(--border);}
+  .habit-check-row:last-child{border-bottom:none;}
+  .habit-check-row span{flex:1; font-size:14px;}
+  .journal-embed .stars{margin-bottom:8px;}
+  .photo-row{display:flex; align-items:center; gap:10px; margin:10px 0;}
+  .photo-btn{background:var(--surface2); border:1px dashed var(--border); border-radius:10px; width:56px; height:56px; display:flex; align-items:center; justify-content:center; color:var(--text-faint); flex:0 0 auto;}
+  .photo-thumb{width:56px; height:56px; border-radius:10px; object-fit:cover; flex:0 0 auto;}
+  .photo-remove{font-size:12px; color:var(--danger); background:none; border:none;}
+
+  /* ---- settings modal ---- */
+  .backup-row{display:flex; flex-direction:column; gap:10px; margin-top:6px;}
+  .hint{font-size:12px; color:var(--text-faint); line-height:1.5;}
+
+  /* ---- habit month heatmap ---- */
+  .habit-stats{font-size:12px; color:var(--habit); font-weight:700; margin-bottom:8px;}
+  .heat-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:4px;}
+  .heat-cell{aspect-ratio:1; border-radius:6px; border:1.5px solid var(--border); background:transparent;}
+  .heat-cell.done{background:var(--habit); border-color:var(--habit);}
+  .heat-cell.faded{opacity:0; pointer-events:none;}
+  .heat-cell.future{opacity:.25; pointer-events:none;}
+
+  .loading-screen{position:fixed; inset:0; background:var(--bg); z-index:100; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:10px; color:var(--text-faint); font-size:13px;}
+  .spinner{width:22px; height:22px; border:2.5px solid var(--border); border-top-color:var(--work); border-radius:50%; animation:spin .8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div id="loadingScreen" class="loading-screen">
+    <div class="spinner"></div>
+    <div>загружаю хаб…</div>
+  </div>
+
+  <header class="top">
+    <div class="header-top-row">
+      <div class="date" id="headerDate">—</div>
+      <div class="header-actions">
+        <div class="sync-badge" id="syncBadge"><span class="sync-dot"></span><span id="syncLabel">сохранено</span></div>
+        <button class="gearbtn" id="settingsBtn">SETTINGS_ICON</button>
+      </div>
+    </div>
+    <h1 id="headerTitle">День</h1>
+  </header>
+
+  <main>
+    <div class="tabpanel active" id="tab-day"></div>
+    <div class="tabpanel" id="tab-tasks"></div>
+    <div class="tabpanel" id="tab-calendar"></div>
+    <div class="tabpanel" id="tab-habits"></div>
+    <div class="tabpanel" id="tab-sport"></div>
+    <div class="tabpanel" id="tab-goals"></div>
+  </main>
+
+  <nav class="bottom">
+    <div class="navwrap" id="navwrap"></div>
+  </nav>
+
+  <div class="modal-backdrop" id="modalBackdrop">
+    <div class="modal-sheet" id="modalSheet"></div>
+  </div>
+</div>
+
+<script>
+/* ============================= HELPERS ============================= */
+const $ = (sel, root=document) => root.querySelector(sel);
+const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+const uid = () => 'id_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,8);
+const pad2 = n => String(n).padStart(2,'0');
+const isoDate = d => `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+const todayISO = () => isoDate(new Date());
+const parseISO = s => { const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); };
+const monthKey = iso => iso.slice(0,7);
+function mondayOf(d){ const x=new Date(d); const day=(x.getDay()+6)%7; x.setDate(x.getDate()-day); return x; }
+function weekStartISO(iso){ return isoDate(mondayOf(parseISO(iso))); }
+const DOW = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+const MONTHS = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+const MONTHS_NOM = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+function fmtHuman(iso){ const d=parseISO(iso); return `${d.getDate()} ${MONTHS[d.getMonth()]}`; }
+function debounce(fn, ms){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); }; }
+
+function icon(name, cls=''){
+  const paths = {
+    home: '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/>',
+    calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/>',
+    flame: '<path d="M12 3c1 4-4 5-4 9a4 4 0 008 0c0-2-1-3-1-3s2 1 2 4a6 6 0 01-12 0c0-5 5-6 7-10z"/>',
+    dumbbell: '<path d="M6 8v8M18 8v8M2 10v4M22 10v4M6 12h12"/>',
+    book: '<path d="M4 4h11a3 3 0 013 3v13H7a3 3 0 01-3-3V4z"/><path d="M18 4h2v16h-2"/>',
+    target: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r=".7" fill="currentColor"/>',
+    plus: '<path d="M12 5v14M5 12h14"/>',
+    trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
+    check: '<path d="M4 12l6 6L20 6"/>',
+    chevLeft: '<path d="M15 5l-7 7 7 7"/>',
+    chevRight: '<path d="M9 5l7 7-7 7"/>',
+    x: '<path d="M6 6l12 12M18 6L6 18"/>',
+    arrowRight: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+    ruler: '<rect x="3" y="8" width="18" height="8" rx="1"/><path d="M7 8v3M11 8v3M15 8v3"/>',
+    star: '<path d="M12 2l2.9 6.6 7.1.7-5.4 4.7 1.7 7-6.3-3.9L5.7 21l1.7-7L2 9.3l7.1-.7z"/>',
+    list: '<path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4" cy="6" r="1.4" fill="currentColor"/><circle cx="4" cy="12" r="1.4" fill="currentColor"/><circle cx="4" cy="18" r="1.4" fill="currentColor"/>',
+    camera: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="14" r="3.3"/>',
+    settings: '<circle cx="12" cy="12" r="3"/><path d="M4 12h2M18 12h2M12 4v2M12 18v2M6.3 6.3l1.4 1.4M16.3 16.3l1.4 1.4M17.7 6.3l-1.4 1.4M7.7 16.3l-1.4 1.4"/>',
+    download: '<path d="M12 3v12M7 11l5 5 5-5M5 21h14"/>',
+    upload: '<path d="M12 21V9M7 13l5-5 5 5M5 3h14"/>'
+  };
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${cls}">${paths[name]||''}</svg>`;
+}
+
+/* ============================= STORAGE (Supabase, откат на Claude) ============================= */
+const SUPABASE_URL = 'https://dlvddgyyamalwlxpyhoi.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_FYGpET_Hu7HVIDuJvT_Fkw_sCxHEJp4';
+const SB_TABLE = 'Storage';
+let storageMode = 'supabase'; // 'supabase' | 'claude'
+
+async function sbGet(key){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${SB_TABLE}?key=eq.${encodeURIComponent(key)}&select=value`, {
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+  });
+  if(!res.ok) throw new Error('sb GET '+res.status);
+  const rows = await res.json();
+  return rows.length ? rows[0].value : null;
+}
+async function sbSet(key, value){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${SB_TABLE}?on_conflict=key`, {
+    method:'POST',
+    headers: { apikey: SUPABASE_KEY, Authorization:`Bearer ${SUPABASE_KEY}`, 'Content-Type':'application/json', Prefer:'resolution=merge-duplicates,return=minimal' },
+    body: JSON.stringify([{ key, value }])
+  });
+  if(!res.ok) throw new Error('sb SET '+res.status);
+  return true;
+}
+async function testSupabase(){
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${SB_TABLE}?limit=1`, { headers:{ apikey:SUPABASE_KEY, Authorization:`Bearer ${SUPABASE_KEY}` } });
+    return true; // any real HTTP response means the network path works
+  }catch(e){ return false; }
+}
+
+async function loadKey(key, fallback){
+  for(let attempt=0; attempt<2; attempt++){
+    try{
+      if(storageMode==='supabase'){
+        const value = await sbGet(key);
+        return value !== null ? JSON.parse(value) : fallback;
+      } else {
+        const r = await window.storage.get(key);
+        return r ? JSON.parse(r.value) : fallback;
+      }
+    }catch(e){ if(attempt===1) return fallback; await new Promise(res=>setTimeout(res,300)); }
+  }
+  return fallback;
+}
+let syncStatus = 'saved';
+function setSyncStatus(s){
+  syncStatus = s;
+  const badge = $('#syncBadge'); if(!badge) return;
+  badge.className = 'sync-badge ' + (s==='saving' ? 'saving' : s==='error' ? 'error' : '');
+  const modeTag = storageMode==='claude' ? ' · резерв' : '';
+  $('#syncLabel').textContent = (s==='saving' ? 'сохраняю…' : s==='error' ? 'не сохранено · нажми' : 'сохранено') + modeTag;
+}
+async function saveKey(key, value){
+  setSyncStatus('saving');
+  let delay = 300;
+  for(let attempt=0; attempt<3; attempt++){
+    try{
+      if(storageMode==='supabase') await sbSet(key, JSON.stringify(value));
+      else { const r = await window.storage.set(key, JSON.stringify(value)); if(!r) throw new Error('empty result'); }
+      setSyncStatus('saved'); return;
+    }catch(e){
+      if(attempt===2){ setSyncStatus('error'); console.error('save failed', key, e); return; }
+      await new Promise(res=>setTimeout(res, delay)); delay*=3;
+    }
+  }
+}
+function retryAllSaves(){ persistTasks(); persistHabits(); persistSport(); persistJournal(); persistGoals(); }
+
+function defaultLists(){
+  return [
+    { id:'inbox', name:'Входящие', builtin:true },
+    { id:'work', name:'Работа', builtin:true },
+    { id:'home', name:'Дом', builtin:true },
+  ];
+}
+
+const state = {
+  tasks: [], lists: defaultLists(),
+  habits: [], habitEntries: {},
+  exercises: [], sportLogs: {}, workouts: [], measurements: [],
+  journal: [],
+  goalsMonthly: [], goalsWeekly: []
+};
+
+const persistTasks  = debounce(()=> saveKey('tasks-data',  { tasks: state.tasks, lists: state.lists }), 350);
+const persistHabits  = debounce(()=> saveKey('habits-data', { habits: state.habits, habitEntries: state.habitEntries }), 350);
+const persistSport   = debounce(()=> saveKey('sport-data',  { exercises: state.exercises, sportLogs: state.sportLogs, workouts: state.workouts, measurements: state.measurements }), 350);
+const persistJournal = debounce(()=> saveKey('journal-data',{ journal: state.journal }), 350);
+const persistGoals   = debounce(()=> saveKey('goals-data',  { goalsMonthly: state.goalsMonthly, goalsWeekly: state.goalsWeekly }), 350);
+
+async function loadAll(){
+  const [t, h, s, j, g] = await Promise.all([
+    loadKey('tasks-data', null),
+    loadKey('habits-data', null),
+    loadKey('sport-data', null),
+    loadKey('journal-data', null),
+    loadKey('goals-data', null),
+  ]);
+  if(t){
+    state.tasks = t.tasks || [];
+    state.lists = t.lists || defaultLists();
+    // migrate legacy inbox format (pre-lists version)
+    if(t.inbox){
+      ['work','home'].forEach(k => (t.inbox[k]||[]).forEach(item => {
+        state.tasks.push({ id:item.id||uid(), type:k, list:'inbox', text:item.text, date:null, tags:[], subtasks:[], done:false, createdAt:item.createdAt||Date.now() });
+      }));
+    }
+    // ensure every task has a list field (older tasks predating lists)
+    state.tasks.forEach(task => { if(!task.list) task.list = task.type || 'inbox'; });
+  }
+  if(h){ state.habits=h.habits||[]; state.habitEntries=h.habitEntries||{}; }
+  if(s){ state.exercises=s.exercises||[]; state.sportLogs=s.sportLogs||{}; state.workouts=s.workouts||[]; state.measurements=s.measurements||[]; }
+  if(j){ state.journal=j.journal||[]; }
+  if(g){ state.goalsMonthly=g.goalsMonthly||[]; state.goalsWeekly=g.goalsWeekly||[]; }
+}
+
+/* ============================= NAV / ROUTER ============================= */
+const TABS = [
+  { id:'day', label:'День', icon:'home', title:'День' },
+  { id:'tasks', label:'Задачи', icon:'list', title:'Задачи' },
+  { id:'calendar', label:'Календарь', icon:'calendar', title:'Календарь' },
+  { id:'habits', label:'Привычки', icon:'flame', title:'Привычки' },
+  { id:'sport', label:'Спорт', icon:'dumbbell', title:'Спорт' },
+  { id:'goals', label:'Цели', icon:'target', title:'Цели' },
+];
+let activeTab = 'day';
+let calMonth = monthKey(todayISO());
+let habitsMonthCursor = monthKey(todayISO());
+let goalsMonthCursor = monthKey(todayISO());
+let goalsWeekCursor = weekStartISO(todayISO());
+
+function renderNav(){
+  const wrap = $('#navwrap');
+  wrap.innerHTML = TABS.map(t => `
+    <button class="navbtn ${activeTab===t.id?'active':''}" data-tab="${t.id}">
+      ${icon(t.icon)}
+      <span>${t.label}</span>
+    </button>`).join('');
+  $$('.navbtn', wrap).forEach(b => b.addEventListener('click', ()=> switchTab(b.dataset.tab)));
+}
+function switchTab(id){
+  activeTab = id;
+  $$('.tabpanel').forEach(p => p.classList.remove('active'));
+  $('#tab-'+id).classList.add('active');
+  $$('.navbtn').forEach(b => b.classList.toggle('active', b.dataset.tab===id));
+  $('#headerTitle').textContent = TABS.find(t=>t.id===id).title;
+  renderActive();
+}
+function renderActive(){
+  ({ day: renderDay, tasks: renderTasks, calendar: renderCalendar, habits: renderHabits,
+     sport: renderSport, goals: renderGoals })[activeTab]();
+}
+function renderAllHeader(){
+  const d = new Date();
+  const wd = ['воскресенье','понедельник','вторник','среда','четверг','пятница','суббота'][d.getDay()];
+  $('#headerDate').textContent = `${d.getDate()} ${MONTHS[d.getMonth()]}, ${wd}`;
+}
+
+/* ============================= MODAL ============================= */
+function openModal(html, onMount){
+  $('#modalSheet').innerHTML = `<div class="modal-handle"></div>${html}`;
+  $('#modalBackdrop').classList.add('open');
+  if(onMount) onMount($('#modalSheet'));
+}
+function closeModal(){ $('#modalBackdrop').classList.remove('open'); }
+$('#modalBackdrop').addEventListener('click', e => { if(e.target.id==='modalBackdrop') closeModal(); });
+
+/* ---- Task modal (create/edit) ---- */
+function openTaskModal({ type, date, list, task=null }){
+  const draft = task ? JSON.parse(JSON.stringify(task)) : {
+    id: uid(), type: type||null, list: list || type || 'inbox', text:'', date: date || null, tags:[], subtasks:[], done:false, createdAt: Date.now()
+  };
+  const accent = draft.type==='work' ? 'var(--work)' : draft.type==='home' ? 'var(--home)' : 'var(--goal)';
+  const html = `
+    <div class="modal-title">${task ? 'Задача' : 'Новая задача'}</div>
+    <div class="field"><label>Текст</label><input type="text" id="mf-text" value="${escapeHtml(draft.text)}" placeholder="Что нужно сделать"></div>
+    <div class="field"><label>Список</label>
+      <select id="mf-list">
+        ${state.lists.map(l=>`<option value="${l.id}" ${draft.list===l.id?'selected':''}>${escapeHtml(l.name)}</option>`).join('')}
+      </select>
+    </div>
+    <div class="field"><label>Дата (необязательно)</label><input type="date" id="mf-date" value="${draft.date||''}"></div>
+    <div class="field"><label>Теги (через запятую)</label><input type="text" id="mf-tags" value="${draft.tags.join(', ')}" placeholder="напр. CaseGuru, срочно"></div>
+    <div class="field">
+      <label>Подзадачи</label>
+      <div id="mf-subtasks"></div>
+      <div class="quickadd"><input type="text" id="mf-sub-input" placeholder="Добавить подзадачу"><button id="mf-sub-add" type="button">${icon('plus')}</button></div>
+    </div>
+    <div class="modal-actions">
+      ${task ? `<button class="btn" id="mf-delete" style="color:var(--danger)">Удалить</button>` : ''}
+      <button class="btn btn-primary" id="mf-save" style="background:${accent}">Сохранить</button>
+    </div>
+  `;
+  openModal(html, root => {
+    const renderSubs = () => {
+      $('#mf-subtasks', root).innerHTML = draft.subtasks.map(s => `
+        <div class="subtask-row" data-id="${s.id}">
+          <button class="checkbox ${s.done?'done '+draft.type:''}" data-sub-toggle="${s.id}">${icon('check')}</button>
+          <input type="text" value="${escapeHtml(s.text)}" data-sub-text="${s.id}">
+          <button class="delbtn" data-sub-del="${s.id}">${icon('x')}</button>
+        </div>`).join('');
+      $$('[data-sub-toggle]', root).forEach(b => b.addEventListener('click', ()=>{
+        const st = draft.subtasks.find(s=>s.id===b.dataset.subToggle); st.done=!st.done; renderSubs();
+      }));
+      $$('[data-sub-text]', root).forEach(inp => inp.addEventListener('input', ()=>{
+        draft.subtasks.find(s=>s.id===inp.dataset.subText).text = inp.value;
+      }));
+      $$('[data-sub-del]', root).forEach(b => b.addEventListener('click', ()=>{
+        draft.subtasks = draft.subtasks.filter(s=>s.id!==b.dataset.subDel); renderSubs();
+      }));
+    };
+    renderSubs();
+    $('#mf-sub-add', root).addEventListener('click', ()=>{
+      const inp = $('#mf-sub-input', root);
+      if(!inp.value.trim()) return;
+      draft.subtasks.push({ id: uid(), text: inp.value.trim(), done:false });
+      inp.value=''; renderSubs();
+    });
+    $('#mf-save', root).addEventListener('click', ()=>{
+      draft.text = $('#mf-text', root).value.trim();
+      if(!draft.text) return;
+      draft.list = $('#mf-list', root).value;
+      draft.type = (draft.list==='work'||draft.list==='home') ? draft.list : null;
+      draft.date = $('#mf-date', root).value || null;
+      draft.tags = $('#mf-tags', root).value.split(',').map(s=>s.trim()).filter(Boolean);
+      const idx = state.tasks.findIndex(t=>t.id===draft.id);
+      if(idx>=0) state.tasks[idx]=draft; else state.tasks.push(draft);
+      persistTasks(); closeModal(); renderActive();
+    });
+    if(task){
+      $('#mf-delete', root).addEventListener('click', ()=>{
+        state.tasks = state.tasks.filter(t=>t.id!==draft.id);
+        persistTasks(); closeModal(); renderActive();
+      });
+    }
+  });
+}
+function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ============================= TASK ROW RENDER ============================= */
+function taskRowHTML(t){
+  const subDone = t.subtasks.filter(s=>s.done).length;
+  return `
+  <div class="taskrow">
+    <button class="checkbox ${t.done?'done '+t.type:''}" data-toggle="${t.id}">${icon('check')}</button>
+    <div class="taskbody" data-open="${t.id}">
+      <div class="tasktext ${t.done?'done':''}">${escapeHtml(t.text)}</div>
+      <div class="taskmeta">
+        ${t.tags.map(tag=>`<span class="chip">${escapeHtml(tag)}</span>`).join('')}
+        ${t.subtasks.length ? `<span class="chip sub">${subDone}/${t.subtasks.length} подзадач</span>` : ''}
+      </div>
+    </div>
+    <button class="delbtn" data-del="${t.id}">${icon('x')}</button>
+  </div>`;
+}
+function bindTaskRowEvents(root){
+  $$('[data-toggle]', root).forEach(b => b.addEventListener('click', ()=>{
+    const t = state.tasks.find(x=>x.id===b.dataset.toggle); t.done=!t.done; persistTasks(); renderActive();
+  }));
+  $$('[data-open]', root).forEach(el => el.addEventListener('click', ()=>{
+    const t = state.tasks.find(x=>x.id===el.dataset.open); openTaskModal({ type:t.type, task:t });
+  }));
+  $$('[data-del]', root).forEach(b => b.addEventListener('click', ()=>{
+    state.tasks = state.tasks.filter(x=>x.id!==b.dataset.del); persistTasks(); renderActive();
+  }));
+}
+
+/* ============================= DAY TAB (единый лист) ============================= */
+function renderDay(){
+  const t = todayISO();
+  const work = state.tasks.filter(x=>x.type==='work' && x.date===t);
+  const home = state.tasks.filter(x=>x.type==='home' && x.date===t);
+  const entry = state.journal.find(j=>j.date===t);
+
+  const html = `
+    <div class="section-title" style="margin-top:6px">
+      <h2><span class="accent-dot" style="background:var(--work)"></span>Работа</h2>
+      <span class="count">${work.length}/5</span>
+    </div>
+    <div class="slotlist" id="workSlots"></div>
+
+    <div class="section-title">
+      <h2><span class="accent-dot" style="background:var(--home)"></span>Дом</h2>
+      <span class="count">${home.length}/3</span>
+    </div>
+    <div class="slotlist" id="homeSlots"></div>
+
+    <div class="section-title"><h2><span class="accent-dot" style="background:var(--habit)"></span>Привычки сегодня</h2></div>
+    <div class="card" id="dayHabits"></div>
+
+    <div class="section-title"><h2><span class="accent-dot" style="background:var(--journal)"></span>Дневник</h2></div>
+    <div class="card journal-embed">
+      <div class="stars" id="starsToday"></div>
+      <div class="photo-row" id="photoRow"></div>
+      <textarea class="journal-ta" id="journalTa" placeholder="Как прошёл день?">${entry?escapeHtml(entry.text):''}</textarea>
+      <button class="btn btn-primary" id="journalSave" style="background:var(--journal); color:#1E1A22; margin-top:10px; width:100%;">Сохранить</button>
+    </div>
+  `;
+  $('#tab-day').innerHTML = html;
+
+  const workEl = $('#workSlots'), homeEl = $('#homeSlots');
+  workEl.innerHTML = work.map(taskRowHTML).join('') + (work.length<5 ? `<button class="addslot" data-addtask="work"><span class="plusring">+</span>Добавить рабочую задачу</button>` : '');
+  homeEl.innerHTML = home.map(taskRowHTML).join('') + (home.length<3 ? `<button class="addslot" data-addtask="home"><span class="plusring">+</span>Добавить домашнее дело</button>` : '');
+  bindTaskRowEvents(workEl); bindTaskRowEvents(homeEl);
+  $$('[data-addtask]').forEach(b => b.addEventListener('click', ()=> openTaskModal({ type:b.dataset.addtask, list:b.dataset.addtask, date:t })));
+
+  const habEl = $('#dayHabits');
+  if(!state.habits.length){ habEl.innerHTML = `<div class="empty">Добавь привычки во вкладке «Привычки»</div>`; }
+  else {
+    habEl.innerHTML = state.habits.map(h => {
+      const done = !!state.habitEntries[`${h.id}_${t}`];
+      return `<div class="habit-check-row">
+        <button class="checkbox ${done?'done':''}" style="${done?'background:var(--habit);border-color:var(--habit)':''}" data-hcheck="${h.id}">${icon('check')}</button>
+        <span>${escapeHtml(h.name)}</span>
+      </div>`;
+    }).join('');
+    $$('[data-hcheck]', habEl).forEach(b => b.addEventListener('click', ()=>{
+      const key = `${b.dataset.hcheck}_${t}`;
+      if(state.habitEntries[key]) delete state.habitEntries[key]; else state.habitEntries[key]=true;
+      persistHabits(); renderDay();
+    }));
+  }
+
+  // journal embed
+  let currentRating = entry ? entry.rating : 0;
+  let currentPhoto = entry ? entry.photo||null : null;
+  const starsEl = $('#starsToday');
+  function drawStars(){
+    starsEl.innerHTML = [1,2,3,4,5].map(n => `<button class="star ${n<=currentRating?'on':''}" data-star="${n}">${icon('star')}</button>`).join('');
+    $$('[data-star]', starsEl).forEach(b => b.addEventListener('click', ()=>{ currentRating = Number(b.dataset.star); drawStars(); }));
+  }
+  drawStars();
+  function drawPhotoRow(){
+    const row = $('#photoRow');
+    row.innerHTML = currentPhoto
+      ? `<img class="photo-thumb" src="${currentPhoto}"><button class="photo-remove" id="photoRemove">Убрать фото</button>`
+      : `<label class="photo-btn">${icon('camera')}<input type="file" accept="image/*" id="photoInput" style="display:none"></label><span class="hint">Фото дня — покажется обложкой в календаре</span>`;
+    const inp = $('#photoInput');
+    if(inp) inp.addEventListener('change', async e => {
+      const file = e.target.files[0]; if(!file) return;
+      currentPhoto = await compressImage(file); drawPhotoRow();
+    });
+    const rm = $('#photoRemove');
+    if(rm) rm.addEventListener('click', ()=>{ currentPhoto=null; drawPhotoRow(); });
+  }
+  drawPhotoRow();
+
+  $('#journalSave').addEventListener('click', ()=>{
+    const text = $('#journalTa').value.trim();
+    if(!currentRating && !text && !currentPhoto) return;
+    if(entry){ entry.rating = currentRating||entry.rating; entry.text = text; entry.photo = currentPhoto; }
+    else { state.journal.push({ id: uid(), date:t, rating: currentRating||3, text, photo: currentPhoto }); }
+    persistJournal(); renderDay();
+  });
+}
+function compressImage(file, maxW=640, quality=0.6){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        let w=img.width, h=img.height;
+        if(w>maxW){ h = Math.round(h*maxW/w); w = maxW; }
+        const canvas = document.createElement('canvas'); canvas.width=w; canvas.height=h;
+        canvas.getContext('2d').drawImage(img,0,0,w,h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ============================= TASKS TAB (списки, как в Trello) ============================= */
+function renderTasks(){
+  const html = `
+    <div class="kanban-board" id="kanbanBoard"></div>
+  `;
+  $('#tab-tasks').innerHTML = html;
+  const board = $('#kanbanBoard');
+  board.innerHTML = state.lists.map(l => {
+    const items = state.tasks.filter(x=>x.list===l.id);
+    return `
+    <div class="kanban-col">
+      <div class="kanban-col-head">
+        <b>${escapeHtml(l.name)}</b>
+        <div class="row-gap" style="align-items:center; gap:6px;">
+          <span class="kc-count">${items.length}</span>
+          ${!l.builtin ? `<button class="delbtn" data-listdel="${l.id}">${icon('x')}</button>` : ''}
+        </div>
+      </div>
+      <div class="kanban-quickadd">
+        <input type="text" id="qa-${l.id}" placeholder="Добавить…">
+        <button data-qadd="${l.id}">${icon('plus')}</button>
+      </div>
+      <div class="kanban-cards">
+        ${items.length ? items.map(cardHTML).join('') : `<div class="empty" style="padding:10px 0">Пусто</div>`}
+      </div>
+    </div>`;
+  }).join('') + `<button class="kanban-addcol" id="addListBtn">${icon('plus')} Новый список</button>`;
+
+  $$('[data-qadd]', board).forEach(b => b.addEventListener('click', ()=> quickAddToList(b.dataset.qadd)));
+  $$('[id^="qa-"]', board).forEach(inp => inp.addEventListener('keydown', e=>{
+    if(e.key==='Enter'){ const listId = inp.id.slice(3); quickAddToList(listId); }
+  }));
+  $$('[data-open]', board).forEach(el => el.addEventListener('click', ()=>{
+    const tsk = state.tasks.find(x=>x.id===el.dataset.open); openTaskModal({ task: tsk });
+  }));
+  $$('[data-toggle]', board).forEach(b => b.addEventListener('click', ()=>{
+    const tsk = state.tasks.find(x=>x.id===b.dataset.toggle); tsk.done=!tsk.done; persistTasks(); renderTasks();
+  }));
+  $$('[data-listdel]', board).forEach(b => b.addEventListener('click', ()=>{
+    const id = b.dataset.listdel;
+    state.tasks.forEach(tsk => { if(tsk.list===id){ tsk.list='inbox'; if(tsk.type!=='work'&&tsk.type!=='home') tsk.type=null; } });
+    state.lists = state.lists.filter(l=>l.id!==id);
+    persistTasks(); renderTasks();
+  }));
+  $('#addListBtn').addEventListener('click', ()=>{
+    const name = prompt('Название списка');
+    if(name && name.trim()){ state.lists.push({ id: uid(), name: name.trim(), builtin:false }); persistTasks(); renderTasks(); }
+  });
+}
+function cardHTML(t){
+  const subDone = t.subtasks.filter(s=>s.done).length;
+  const accent = t.type==='work' ? 'var(--work)' : t.type==='home' ? 'var(--home)' : 'var(--goal)';
+  return `
+  <div class="kcard">
+    <button class="checkbox ${t.done?'done':''}" style="${t.done?`background:${accent};border-color:${accent}`:''}" data-toggle="${t.id}">${icon('check')}</button>
+    <div style="flex:1" data-open="${t.id}">
+      <div class="kctext ${t.done?'done':''}">${escapeHtml(t.text)}</div>
+      <div class="kcmeta">
+        ${t.date ? `<span class="chip">${fmtHuman(t.date)}</span>` : ''}
+        ${t.tags.map(tag=>`<span class="chip">${escapeHtml(tag)}</span>`).join('')}
+        ${t.subtasks.length ? `<span class="chip sub">${subDone}/${t.subtasks.length}</span>` : ''}
+      </div>
+    </div>
+  </div>`;
+}
+function quickAddToList(listId){
+  const inp = $('#qa-'+listId);
+  if(!inp.value.trim()) return;
+  const type = (listId==='work'||listId==='home') ? listId : null;
+  state.tasks.push({ id: uid(), type, list: listId, text: inp.value.trim(), date:null, tags:[], subtasks:[], done:false, createdAt: Date.now() });
+  inp.value=''; persistTasks(); renderTasks();
+}
+
+/* ============================= CALENDAR TAB ============================= */
+function renderCalendar(){
+  const [y,m] = calMonth.split('-').map(Number);
+  const first = new Date(y, m-1, 1);
+  const startOffset = (first.getDay()+6)%7;
+  const daysInMonth = new Date(y, m, 0).getDate();
+  const prevDays = new Date(y, m-1, 0).getDate();
+
+  let cells = [];
+  for(let i=startOffset-1;i>=0;i--) cells.push({ day: prevDays-i, faded:true });
+  for(let d=1; d<=daysInMonth; d++) cells.push({ day:d, faded:false, iso: `${y}-${pad2(m)}-${pad2(d)}` });
+  while(cells.length % 7 !== 0) cells.push({ day: cells.length, faded:true });
+
+  const html = `
+    <div class="cal-header">
+      <button class="cal-nav" id="calPrev">${icon('chevLeft')}</button>
+      <h2>${MONTHS_NOM[m-1]} ${y}</h2>
+      <button class="cal-nav" id="calNext">${icon('chevRight')}</button>
+    </div>
+    <div class="cal-grid">
+      ${DOW.map(d=>`<div class="cal-dow">${d}</div>`).join('')}
+      ${cells.map(c => {
+        if(c.faded) return `<div class="cal-cell faded">${c.day}</div>`;
+        const work = state.tasks.some(t=>t.type==='work' && t.date===c.iso);
+        const home = state.tasks.some(t=>t.type==='home' && t.date===c.iso);
+        const jr = state.journal.find(j=>j.date===c.iso);
+        const isToday = c.iso === todayISO();
+        const coverStyle = jr && jr.photo
+          ? `style="background-image:linear-gradient(180deg, rgba(0,0,0,.05), rgba(0,0,0,.6)), url('${jr.photo}'); background-size:cover; background-position:center; color:#fff;"`
+          : '';
+        return `<button class="cal-cell ${isToday?'today':''}" data-day="${c.iso}" ${coverStyle}>
+          ${c.day}
+          <div class="cal-dots">
+            ${work?'<i style="background:var(--work)"></i>':''}
+            ${home?'<i style="background:var(--home)"></i>':''}
+            ${(jr && !jr.photo)?'<i style="background:var(--journal)"></i>':''}
+          </div>
+        </button>`;
+      }).join('')}
+    </div>
+  `;
+  $('#tab-calendar').innerHTML = html;
+  $('#calPrev').addEventListener('click', ()=>{ calMonth = shiftMonth(calMonth,-1); renderCalendar(); });
+  $('#calNext').addEventListener('click', ()=>{ calMonth = shiftMonth(calMonth,1); renderCalendar(); });
+  $$('[data-day]').forEach(b => b.addEventListener('click', ()=> openDayDetail(b.dataset.day)));
+}
+function shiftMonth(key, delta){
+  let [y,m] = key.split('-').map(Number);
+  m += delta; if(m<1){m=12;y--;} if(m>12){m=1;y++;}
+  return `${y}-${pad2(m)}`;
+}
+function openDayDetail(iso){
+  const work = state.tasks.filter(t=>t.type==='work' && t.date===iso);
+  const home = state.tasks.filter(t=>t.type==='home' && t.date===iso);
+  const jr = state.journal.find(j=>j.date===iso);
+  const html = `
+    <div class="modal-title">${fmtHuman(iso)}</div>
+    <div class="section-title"><h2 style="color:var(--work)">Работа</h2></div>
+    <div class="slotlist" id="dd-work"></div>
+    <div class="row-gap" style="margin:10px 0"><button class="btn small" id="dd-add-work">+ рабочая задача</button></div>
+    <div class="section-title"><h2 style="color:var(--home)">Дом</h2></div>
+    <div class="slotlist" id="dd-home"></div>
+    <div class="row-gap" style="margin:10px 0 4px"><button class="btn small" id="dd-add-home">+ домашнее дело</button></div>
+    ${ jr ? `
+      <div class="section-title"><h2 style="color:var(--journal)">Дневник</h2></div>
+      <div class="card">
+        <div class="journal-hist-row" style="border:none; padding:0;">
+          <div class="jhstars">${'★'.repeat(jr.rating)}${'☆'.repeat(5-jr.rating)}</div>
+          <p>${escapeHtml(jr.text)||'<span style=\"color:var(--text-faint)\">без заметки</span>'}</p>
+        </div>
+      </div>
+    ` : ''}
+  `;
+  openModal(html, root => {
+    const wEl = $('#dd-work', root), hEl = $('#dd-home', root);
+    wEl.innerHTML = work.length ? work.map(taskRowHTML).join('') : `<div class="empty">Пока пусто</div>`;
+    hEl.innerHTML = home.length ? home.map(taskRowHTML).join('') : `<div class="empty">Пока пусто</div>`;
+    bindDayModalRow(wEl, iso); bindDayModalRow(hEl, iso);
+    $('#dd-add-work', root).addEventListener('click', ()=>{ closeModal(); openTaskModal({type:'work', date:iso}); });
+    $('#dd-add-home', root).addEventListener('click', ()=>{ closeModal(); openTaskModal({type:'home', date:iso}); });
+  });
+}
+function bindDayModalRow(root, iso){
+  $$('[data-toggle]', root).forEach(b => b.addEventListener('click', ()=>{
+    const t = state.tasks.find(x=>x.id===b.dataset.toggle); t.done=!t.done; persistTasks(); openDayDetail(iso);
+  }));
+  $$('[data-open]', root).forEach(el => el.addEventListener('click', ()=>{
+    const t = state.tasks.find(x=>x.id===el.dataset.open); closeModal(); openTaskModal({ type:t.type, task:t });
+  }));
+  $$('[data-del]', root).forEach(b => b.addEventListener('click', ()=>{
+    state.tasks = state.tasks.filter(x=>x.id!==b.dataset.del); persistTasks(); openDayDetail(iso);
+  }));
+}
+
+/* ============================= HABITS TAB ============================= */
+function habitStreak(h){
+  let streak=0, d=new Date();
+  while(true){
+    const iso = isoDate(d);
+    if(state.habitEntries[`${h.id}_${iso}`]){ streak++; d.setDate(d.getDate()-1); }
+    else if(iso===todayISO()){ d.setDate(d.getDate()-1); continue; }
+    else break;
+  }
+  return streak;
+}
+function buildMonthCells(key){
+  const [y,m] = key.split('-').map(Number);
+  const first = new Date(y, m-1, 1);
+  const startOffset = (first.getDay()+6)%7;
+  const daysInMonth = new Date(y, m, 0).getDate();
+  const prevDays = new Date(y, m-1, 0).getDate();
+  let cells = [];
+  for(let i=startOffset-1;i>=0;i--) cells.push({ day: prevDays-i, faded:true });
+  for(let d=1; d<=daysInMonth; d++) cells.push({ day:d, faded:false, iso: `${y}-${pad2(m)}-${pad2(d)}` });
+  while(cells.length % 7 !== 0) cells.push({ day: cells.length, faded:true });
+  return cells;
+}
+function renderHabits(){
+  const [y,m] = habitsMonthCursor.split('-').map(Number);
+  const cells = buildMonthCells(habitsMonthCursor);
+  const t = todayISO();
+
+  const html = `
+    <div class="quickadd" style="margin-top:4px">
+      <input type="text" id="habitInput" placeholder="Новая привычка">
+      <button id="habitAdd">${icon('plus')}</button>
+    </div>
+    <div class="cal-header">
+      <button class="cal-nav" id="hmPrev">${icon('chevLeft')}</button>
+      <h2>${MONTHS_NOM[m-1]} ${y}</h2>
+      <button class="cal-nav" id="hmNext">${icon('chevRight')}</button>
+    </div>
+    <div id="habitList"></div>
+  `;
+  $('#tab-habits').innerHTML = html;
+  $('#hmPrev').addEventListener('click', ()=>{ habitsMonthCursor = shiftMonth(habitsMonthCursor,-1); renderHabits(); });
+  $('#hmNext').addEventListener('click', ()=>{ habitsMonthCursor = shiftMonth(habitsMonthCursor,1); renderHabits(); });
+
+  const listEl = $('#habitList');
+  if(!state.habits.length){ listEl.innerHTML = `<div class="empty">Добавь первую привычку выше</div>`; }
+  else {
+    listEl.innerHTML = state.habits.map(h => {
+      const elapsed = cells.filter(c=>!c.faded && c.iso<=t);
+      const done = elapsed.filter(c=>state.habitEntries[`${h.id}_${c.iso}`]).length;
+      const pct = elapsed.length ? Math.round(done/elapsed.length*100) : 0;
+      return `
+      <div class="habitcard">
+        <div class="habithead">
+          <b>${escapeHtml(h.name)}</b>
+          <div class="row-gap" style="align-items:center;">
+            <span class="streak">🔥 ${habitStreak(h)}</span>
+            <button class="delbtn" data-hdel="${h.id}">${icon('x')}</button>
+          </div>
+        </div>
+        <div class="habit-stats">${elapsed.length ? `${done}/${elapsed.length} дней · ${pct}% · пропущено ${elapsed.length-done}` : 'пока нет данных за месяц'}</div>
+        <div class="heat-grid">
+          ${cells.map(c => {
+            if(c.faded) return `<div class="heat-cell faded"></div>`;
+            const isDone = !!state.habitEntries[`${h.id}_${c.iso}`];
+            const future = c.iso > t;
+            return `<button class="heat-cell ${isDone?'done':''} ${future?'future':''}" data-hid="${h.id}" data-date="${c.iso}" ${future?'disabled':''} title="${c.day}"></button>`;
+          }).join('')}
+        </div>
+      </div>`;
+    }).join('');
+    $$('[data-hid]', listEl).forEach(b => b.addEventListener('click', ()=>{
+      const key = `${b.dataset.hid}_${b.dataset.date}`;
+      if(state.habitEntries[key]) delete state.habitEntries[key]; else state.habitEntries[key]=true;
+      persistHabits(); renderHabits();
+    }));
+    $$('[data-hdel]', listEl).forEach(b => b.addEventListener('click', ()=>{
+      state.habits = state.habits.filter(h=>h.id!==b.dataset.hdel);
+      persistHabits(); renderHabits();
+    }));
+  }
+  $('#habitAdd').addEventListener('click', ()=>{
+    const inp = $('#habitInput'); if(!inp.value.trim()) return;
+    state.habits.push({ id: uid(), name: inp.value.trim(), createdAt: Date.now() });
+    inp.value=''; persistHabits(); renderHabits();
+  });
+  $('#habitInput').addEventListener('keydown', e=>{ if(e.key==='Enter') $('#habitAdd').click(); });
+}
+
+/* ============================= SPORT TAB ============================= */
+function renderSport(){
+  const t = todayISO();
+  const html = `
+    <div class="section-title"><h2>Упражнения</h2><span class="count">${state.exercises.length}/5</span></div>
+    <div id="exerList"></div>
+    ${state.exercises.length<5 ? `<div class="quickadd"><input type="text" id="exerInput" placeholder="Новое упражнение"><button id="exerAdd">${icon('plus')}</button></div>` : ''}
+
+    <div class="section-title"><h2>Тренировки</h2></div>
+    <div class="card">
+      <div class="field" style="margin-bottom:8px"><input type="text" id="woName" placeholder="Название тренировки"></div>
+      <div class="row-gap">
+        <input type="date" id="woDate" value="${t}" style="background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:8px; color:var(--text); flex:1">
+        <input type="number" id="woDur" placeholder="мин" style="width:70px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:8px; color:var(--text)">
+      </div>
+      <input type="text" id="woNote" placeholder="Заметка" style="width:100%; margin-top:8px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:8px; color:var(--text)">
+      <button class="btn btn-primary" id="woAdd" style="margin-top:10px; background:var(--sport); width:100%;">Добавить тренировку</button>
+    </div>
+    <div id="woList"></div>
+
+    <div class="section-title"><h2>Замеры</h2></div>
+    <div class="card">
+      <div class="row-gap">
+        <input type="date" id="meDate" value="${t}" style="background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:8px; color:var(--text); flex:1">
+        <input type="number" id="meWeight" placeholder="вес, кг" style="width:90px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:8px; color:var(--text)">
+      </div>
+      <div class="row-gap" style="margin-top:8px">
+        <input type="number" id="meWaist" placeholder="талия" style="flex:1; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:8px; color:var(--text)">
+        <input type="number" id="meHips" placeholder="бёдра" style="flex:1; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:8px; color:var(--text)">
+        <input type="number" id="meChest" placeholder="грудь" style="flex:1; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:8px; color:var(--text)">
+      </div>
+      <button class="btn btn-primary" id="meAdd" style="margin-top:10px; background:var(--sport); width:100%;">Сохранить замер</button>
+    </div>
+    <div id="meList"></div>
+  `;
+  $('#tab-sport').innerHTML = html;
+
+  const exerEl = $('#exerList');
+  if(!state.exercises.length){ exerEl.innerHTML = `<div class="empty">Добавь до 5 упражнений на день</div>`; }
+  else {
+    exerEl.innerHTML = state.exercises.map(ex => {
+      const todaySets = (state.sportLogs[t]||{})[ex.id] || [];
+      const total = todaySets.reduce((a,b)=>a+b,0);
+      return `
+      <div class="exercard">
+        <div class="exer-top">
+          <div class="exer-name">${escapeHtml(ex.name)}</div>
+          <button class="delbtn" data-exdel="${ex.id}">${icon('x')}</button>
+        </div>
+        <div class="exer-total">${total}<span> повторений сегодня</span></div>
+        <div class="quickreps">
+          ${[5,10,20].map(n=>`<button class="qr-btn" data-exadd="${ex.id}" data-n="${n}">+${n}</button>`).join('')}
+        </div>
+        <div class="customrep">
+          <input type="number" id="custom-${ex.id}" placeholder="своё число">
+          <button class="btn small" data-excustom="${ex.id}">Добавить</button>
+        </div>
+        ${todaySets.length ? `<div class="setschips">${todaySets.map((n,i)=>`<span class="setschip">${n}<button data-exrm="${ex.id}" data-idx="${i}">${icon('x')}</button></span>`).join('')}</div>` : ''}
+      </div>`;
+    }).join('');
+    $$('[data-exadd]', exerEl).forEach(b => b.addEventListener('click', ()=> addRep(b.dataset.exadd, Number(b.dataset.n))));
+    $$('[data-excustom]', exerEl).forEach(b => b.addEventListener('click', ()=>{
+      const inp = $('#custom-'+b.dataset.excustom); const n = Number(inp.value);
+      if(n>0){ addRep(b.dataset.excustom, n); }
+    }));
+    $$('[data-exrm]', exerEl).forEach(b => b.addEventListener('click', ()=>{
+      state.sportLogs[t][b.dataset.exrm].splice(Number(b.dataset.idx),1);
+      persistSport(); renderSport();
+    }));
+    $$('[data-exdel]', exerEl).forEach(b => b.addEventListener('click', ()=>{
+      state.exercises = state.exercises.filter(e=>e.id!==b.dataset.exdel);
+      persistSport(); renderSport();
+    }));
+  }
+  if(state.exercises.length<5){
+    $('#exerAdd').addEventListener('click', ()=>{
+      const inp = $('#exerInput'); if(!inp.value.trim()) return;
+      state.exercises.push({ id: uid(), name: inp.value.trim() });
+      inp.value=''; persistSport(); renderSport();
+    });
+  }
+
+  const woEl = $('#woList');
+  const sortedWo = [...state.workouts].sort((a,b)=> b.date.localeCompare(a.date));
+  woEl.innerHTML = sortedWo.length ? sortedWo.map(w => `
+    <div class="minirow">
+      <div>
+        <div class="l">${escapeHtml(w.name)}</div>
+        <div class="r">${fmtHuman(w.date)}${w.duration?` · ${w.duration} мин`:''}${w.note?` · ${escapeHtml(w.note)}`:''}</div>
+      </div>
+      <button class="delbtn" data-wodel="${w.id}">${icon('x')}</button>
+    </div>`).join('') : `<div class="empty">Тренировок пока нет</div>`;
+  $$('[data-wodel]', woEl).forEach(b => b.addEventListener('click', ()=>{
+    state.workouts = state.workouts.filter(w=>w.id!==b.dataset.wodel); persistSport(); renderSport();
+  }));
+  $('#woAdd').addEventListener('click', ()=>{
+    const name = $('#woName').value.trim(); if(!name) return;
+    state.workouts.push({ id: uid(), name, date: $('#woDate').value||t, duration: Number($('#woDur').value)||0, note: $('#woNote').value.trim() });
+    persistSport(); renderSport();
+  });
+
+  const meEl = $('#meList');
+  const sortedMe = [...state.measurements].sort((a,b)=> b.date.localeCompare(a.date));
+  meEl.innerHTML = sortedMe.length ? sortedMe.map(m => `
+    <div class="minirow">
+      <div>
+        <div class="l">${m.weight?m.weight+' кг':'—'}</div>
+        <div class="r">${fmtHuman(m.date)}${m.waist?` · талия ${m.waist}`:''}${m.hips?` · бёдра ${m.hips}`:''}${m.chest?` · грудь ${m.chest}`:''}</div>
+      </div>
+      <button class="delbtn" data-medel="${m.id}">${icon('x')}</button>
+    </div>`).join('') : `<div class="empty">Замеров пока нет</div>`;
+  $$('[data-medel]', meEl).forEach(b => b.addEventListener('click', ()=>{
+    state.measurements = state.measurements.filter(m=>m.id!==b.dataset.medel); persistSport(); renderSport();
+  }));
+  $('#meAdd').addEventListener('click', ()=>{
+    const date = $('#meDate').value || t;
+    state.measurements.push({ id: uid(), date, weight:Number($('#meWeight').value)||null, waist:Number($('#meWaist').value)||null, hips:Number($('#meHips').value)||null, chest:Number($('#meChest').value)||null });
+    persistSport(); renderSport();
+  });
+}
+function addRep(exId, n){
+  const t = todayISO();
+  if(!state.sportLogs[t]) state.sportLogs[t] = {};
+  if(!state.sportLogs[t][exId]) state.sportLogs[t][exId] = [];
+  state.sportLogs[t][exId].push(n);
+  persistSport(); renderSport();
+}
+
+/* ============================= SETTINGS / BACKUP MODAL ============================= */
+function openSettingsModal(){
+  const modeText = storageMode==='supabase' ? 'Supabase (облако) — подключено ✅' : 'Резервное хранилище Claude — Supabase недоступен из артефакта ⚠️';
+  const html = `
+    <div class="modal-title">Настройки и резервная копия</div>
+    <p class="hint" style="margin-bottom:14px;">Хранилище сейчас: <b style="color:var(--text)">${modeText}</b></p>
+    <div class="backup-row">
+      <button class="btn btn-primary" id="exportBtn">${icon('download')} Скачать резервную копию (JSON)</button>
+      <p class="hint">Сохрани файл в папку на компьютере, которая синхронизируется с Яндекс.Диском — он сам загрузится в облако. Так данные не зависят от хранилища Claude.</p>
+      <label class="btn" style="text-align:center; display:block;">${icon('upload')} Загрузить из файла
+        <input type="file" accept=".json" id="importInput" style="display:none">
+      </label>
+      <p class="hint">Загрузка полностью заменит текущие данные в приложении сохранённой копией.</p>
+    </div>
+  `;
+  openModal(html, root => {
+    $('#exportBtn', root).addEventListener('click', exportBackup);
+    $('#importInput', root).addEventListener('change', importBackup);
+  });
+}
+function exportBackup(){
+  const snapshot = {
+    tasks: state.tasks, lists: state.lists,
+    habits: state.habits, habitEntries: state.habitEntries,
+    exercises: state.exercises, sportLogs: state.sportLogs, workouts: state.workouts, measurements: state.measurements,
+    journal: state.journal,
+    goalsMonthly: state.goalsMonthly, goalsWeekly: state.goalsWeekly,
+    exportedAt: new Date().toISOString()
+  };
+  const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type:'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `life-hub-backup-${todayISO()}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+function importBackup(e){
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try{
+      const data = JSON.parse(ev.target.result);
+      if(!confirm('Заменить текущие данные содержимым файла?')) return;
+      state.tasks = data.tasks || []; state.lists = data.lists || defaultLists();
+      state.habits = data.habits || []; state.habitEntries = data.habitEntries || {};
+      state.exercises = data.exercises || []; state.sportLogs = data.sportLogs || {};
+      state.workouts = data.workouts || []; state.measurements = data.measurements || [];
+      state.journal = data.journal || [];
+      state.goalsMonthly = data.goalsMonthly || []; state.goalsWeekly = data.goalsWeekly || [];
+      persistTasks(); persistHabits(); persistSport(); persistJournal(); persistGoals();
+      closeModal(); renderActive();
+    }catch(err){ alert('Не удалось прочитать файл — проверь, что это тот самый экспортированный JSON.'); }
+  };
+  reader.readAsText(file);
+}
+
+/* ============================= GOALS TAB ============================= */
+function weekLabel(startIso){
+  const start = parseISO(startIso); const end = new Date(start); end.setDate(start.getDate()+6);
+  return `${start.getDate()} – ${end.getDate()} ${MONTHS[end.getMonth()]}`;
+}
+function renderGoals(){
+  const monthGoals = state.goalsMonthly.filter(g=>g.month===goalsMonthCursor);
+  const weekGoals = state.goalsWeekly.filter(g=>g.weekStart===goalsWeekCursor);
+  const [y,m] = goalsMonthCursor.split('-').map(Number);
+
+  const html = `
+    <div class="cal-header">
+      <button class="cal-nav" id="gmPrev">${icon('chevLeft')}</button>
+      <h2>${MONTHS_NOM[m-1]} ${y}</h2>
+      <button class="cal-nav" id="gmNext">${icon('chevRight')}</button>
+    </div>
+    <div class="quickadd"><input type="text" id="gmInput" placeholder="Цель на месяц"><button id="gmAdd">${icon('plus')}</button></div>
+    <div id="gmList" style="margin-bottom:8px"></div>
+
+    <div class="section-title" style="margin-top:28px"></div>
+    <div class="cal-header">
+      <button class="cal-nav" id="gwPrev">${icon('chevLeft')}</button>
+      <h2>${weekLabel(goalsWeekCursor)}</h2>
+      <button class="cal-nav" id="gwNext">${icon('chevRight')}</button>
+    </div>
+    <div class="quickadd"><input type="text" id="gwInput" placeholder="Цель на неделю"></div>
+    <div class="field" style="margin-bottom:8px">
+      <select id="gwLink">
+        <option value="">Без связи с целью месяца</option>
+        ${monthGoals.map(g=>`<option value="${g.id}">${escapeHtml(g.text)}</option>`).join('')}
+      </select>
+    </div>
+    <button class="btn btn-primary" id="gwAdd" style="background:var(--goal); width:100%; margin-bottom:12px;">Добавить недельную цель</button>
+    <div id="gwList"></div>
+  `;
+  $('#tab-goals').innerHTML = html;
+
+  const gmEl = $('#gmList');
+  gmEl.innerHTML = monthGoals.length ? monthGoals.map(g => `
+    <div class="goalrow">
+      <button class="checkbox ${g.done?'done':''}" style="${g.done?'background:var(--goal);border-color:var(--goal)':''}" data-gmtoggle="${g.id}">${icon('check')}</button>
+      <span class="gtext ${g.done?'done':''}">${escapeHtml(g.text)}</span>
+      <button class="delbtn" data-gmdel="${g.id}">${icon('x')}</button>
+    </div>`).join('') : `<div class="empty">Целей на месяц пока нет</div>`;
+  $$('[data-gmtoggle]', gmEl).forEach(b => b.addEventListener('click', ()=>{
+    const g = state.goalsMonthly.find(x=>x.id===b.dataset.gmtoggle); g.done=!g.done; persistGoals(); renderGoals();
+  }));
+  $$('[data-gmdel]', gmEl).forEach(b => b.addEventListener('click', ()=>{
+    state.goalsMonthly = state.goalsMonthly.filter(x=>x.id!==b.dataset.gmdel); persistGoals(); renderGoals();
+  }));
+  $('#gmAdd').addEventListener('click', ()=>{
+    const inp = $('#gmInput'); if(!inp.value.trim()) return;
+    state.goalsMonthly.push({ id: uid(), month: goalsMonthCursor, text: inp.value.trim(), done:false });
+    inp.value=''; persistGoals(); renderGoals();
+  });
+  $('#gmPrev').addEventListener('click', ()=>{ goalsMonthCursor = shiftMonth(goalsMonthCursor,-1); renderGoals(); });
+  $('#gmNext').addEventListener('click', ()=>{ goalsMonthCursor = shiftMonth(goalsMonthCursor,1); renderGoals(); });
+
+  const gwEl = $('#gwList');
+  gwEl.innerHTML = weekGoals.length ? weekGoals.map(g => {
+    const linked = state.goalsMonthly.find(m=>m.id===g.linkedGoalId);
+    return `
+    <div class="goalrow" style="flex-wrap:wrap;">
+      <button class="checkbox ${g.done?'done':''}" style="${g.done?'background:var(--goal);border-color:var(--goal)':''}" data-gwtoggle="${g.id}">${icon('check')}</button>
+      <div style="flex:1">
+        <span class="gtext ${g.done?'done':''}">${escapeHtml(g.text)}</span>
+        ${linked?`<div class="goal-link-tag">→ ${escapeHtml(linked.text)}</div>`:''}
+      </div>
+      <button class="delbtn" data-gwdel="${g.id}">${icon('x')}</button>
+    </div>`;
+  }).join('') : `<div class="empty">Целей на неделю пока нет</div>`;
+  $$('[data-gwtoggle]', gwEl).forEach(b => b.addEventListener('click', ()=>{
+    const g = state.goalsWeekly.find(x=>x.id===b.dataset.gwtoggle); g.done=!g.done; persistGoals(); renderGoals();
+  }));
+  $$('[data-gwdel]', gwEl).forEach(b => b.addEventListener('click', ()=>{
+    state.goalsWeekly = state.goalsWeekly.filter(x=>x.id!==b.dataset.gwdel); persistGoals(); renderGoals();
+  }));
+  $('#gwAdd').addEventListener('click', ()=>{
+    const inp = $('#gwInput'); if(!inp.value.trim()) return;
+    state.goalsWeekly.push({ id: uid(), weekStart: goalsWeekCursor, text: inp.value.trim(), linkedGoalId: $('#gwLink').value||null, done:false });
+    inp.value=''; persistGoals(); renderGoals();
+  });
+  $('#gwPrev').addEventListener('click', ()=>{ const d=parseISO(goalsWeekCursor); d.setDate(d.getDate()-7); goalsWeekCursor=isoDate(d); renderGoals(); });
+  $('#gwNext').addEventListener('click', ()=>{ const d=parseISO(goalsWeekCursor); d.setDate(d.getDate()+7); goalsWeekCursor=isoDate(d); renderGoals(); });
+}
+
+/* ============================= INIT ============================= */
+(async function init(){
+  renderAllHeader();
+  renderNav();
+  $('#settingsBtn').innerHTML = icon('settings');
+  $('#settingsBtn').addEventListener('click', openSettingsModal);
+  $('#syncBadge').addEventListener('click', ()=>{ if(syncStatus==='error') retryAllSaves(); });
+  const sbOk = await testSupabase();
+  storageMode = sbOk ? 'supabase' : 'claude';
+  setSyncStatus('saved');
+  await loadAll();
+  renderDay();
+  $('#loadingScreen').style.display = 'none';
+})();
+</script>
+</body>
+</html>
