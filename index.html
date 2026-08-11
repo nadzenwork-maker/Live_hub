@@ -90,6 +90,8 @@
   .taskmeta{display:flex; flex-wrap:wrap; gap:6px; margin-top:5px;}
   .chip{font-size:11px; padding:2px 8px; border-radius:20px; background:var(--surface2); color:var(--text-muted); font-weight:600;}
   .chip.sub{background:transparent; border:1px solid var(--border);}
+  svg{width:18px; height:18px; flex-shrink:0; display:block;}
+  .delbtn svg{width:16px; height:16px;}
   .delbtn{background:none; border:none; color:var(--text-faint); padding:4px; flex:0 0 auto;}
   .addslot{
     display:flex; align-items:center; gap:10px; padding:10px 0; color:var(--text-faint);
@@ -180,6 +182,7 @@
   /* ---- journal ---- */
   .stars{display:flex; gap:6px; margin-bottom:10px;}
   .star{width:30px; height:30px; color:var(--border);}
+  .star svg{width:30px; height:30px;}
   .star.on{color:var(--journal);}
   textarea.journal-ta{width:100%; min-height:90px; background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px 12px; color:var(--text); resize:vertical;}
   .journal-hist-row{padding:10px 0; border-bottom:1px dashed var(--border);}
@@ -388,13 +391,26 @@ async function testSupabase(){
   }catch(e){ return false; }
 }
 async function diagnoseSupabase(){
+  let out = '';
   try{
     const res = await fetch(`${SUPABASE_URL}/rest/v1/${SB_TABLE}?limit=1`, { headers:{ apikey:SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } });
     const text = await res.text();
-    return `GET статус: ${res.status} ${res.statusText}\nОтвет: ${text.slice(0,500)}`;
+    out += `GET статус: ${res.status} ${res.statusText}\nОтвет: ${text.slice(0,300)}\n\n`;
   }catch(e){
-    return `Сетевая ошибка (запрос не дошёл до сервера): ${e.message}`;
+    out += `GET сетевая ошибка: ${e.message}\n\n`;
   }
+  try{
+    const res2 = await fetch(`${SUPABASE_URL}/rest/v1/${SB_TABLE}?on_conflict=key`, {
+      method:'POST',
+      headers:{ apikey:SUPABASE_KEY, Authorization:`Bearer ${SUPABASE_KEY}`, 'Content-Type':'application/json', Prefer:'resolution=merge-duplicates,return=representation' },
+      body: JSON.stringify([{ key:'__test__', value:'ping' }])
+    });
+    const text2 = await res2.text();
+    out += `POST (тестовая запись) статус: ${res2.status} ${res2.statusText}\nОтвет: ${text2.slice(0,300)}`;
+  }catch(e){
+    out += `POST сетевая ошибка: ${e.message}`;
+  }
+  return out;
 }
 
 async function loadKey(key, fallback){
@@ -1002,7 +1018,8 @@ function renderHabits(){
 function renderSport(){
   const t = todayISO();
   const html = `
-    <div class="section-title"><h2>Упражнения</h2><span class="count">${state.exercises.length}/5</span></div>
+    <button class="btn" id="sportStatsBtn" style="width:100%; margin-top:6px; margin-bottom:14px; display:flex; align-items:center; justify-content:center; gap:8px;">${icon('calendar')} Статистика</button>
+    <div class="section-title" style="margin-top:0"><h2>Упражнения</h2><span class="count">${state.exercises.length}/5</span></div>
     <div id="exerList"></div>
     ${state.exercises.length<5 ? `<div class="quickadd"><input type="text" id="exerInput" placeholder="Новое упражнение"><button id="exerAdd">${icon('plus')}</button></div>` : ''}
 
@@ -1034,6 +1051,7 @@ function renderSport(){
     <div id="meList"></div>
   `;
   $('#tab-sport').innerHTML = html;
+  $('#sportStatsBtn').addEventListener('click', openSportStats);
 
   const exerEl = $('#exerList');
   if(!state.exercises.length){ exerEl.innerHTML = `<div class="empty">Добавь до 5 упражнений на день</div>`; }
@@ -1118,6 +1136,62 @@ function renderSport(){
     persistSport(); renderSport();
   });
 }
+function openSportStats(){
+  openModal(`<div id="statsBody"></div>`, root => {
+    let cursor = monthKey(todayISO());
+    let selectedDay = todayISO();
+    function draw(){
+      const [y,m] = cursor.split('-').map(Number);
+      const cells = buildMonthCells(cursor);
+      const body = $('#statsBody', root);
+      body.innerHTML = `
+        <div class="modal-title">Статистика активности</div>
+        <div class="cal-header">
+          <button class="cal-nav" id="ssPrev">${icon('chevLeft')}</button>
+          <h2>${MONTHS_NOM[m-1]} ${y}</h2>
+          <button class="cal-nav" id="ssNext">${icon('chevRight')}</button>
+        </div>
+        <div class="cal-grid">
+          ${DOW.map(d=>`<div class="cal-dow">${d}</div>`).join('')}
+          ${cells.map(c => {
+            if(c.faded) return `<div class="cal-cell faded">${c.day}</div>`;
+            const hasReps = state.sportLogs[c.iso] && Object.values(state.sportLogs[c.iso]).some(arr=>arr && arr.length);
+            const hasWorkout = state.workouts.some(w=>w.date===c.iso);
+            const isToday = c.iso===todayISO();
+            const isSel = c.iso===selectedDay;
+            return `<button class="cal-cell ${isToday?'today':''}" style="${isSel?'border-color:var(--sport); border-width:2px;':''}" data-ssday="${c.iso}">
+              ${c.day}
+              <div class="cal-dots">
+                ${hasReps?'<i style="background:var(--sport)"></i>':''}
+                ${hasWorkout?'<i style="background:var(--goal)"></i>':''}
+              </div>
+            </button>`;
+          }).join('')}
+        </div>
+        <div id="ssDetail" style="margin-top:14px;"></div>
+      `;
+      $('#ssPrev', body).addEventListener('click', ()=>{ cursor=shiftMonth(cursor,-1); draw(); });
+      $('#ssNext', body).addEventListener('click', ()=>{ cursor=shiftMonth(cursor,1); draw(); });
+      $$('[data-ssday]', body).forEach(b => b.addEventListener('click', ()=>{ selectedDay=b.dataset.ssday; draw(); }));
+      drawDetail(selectedDay, $('#ssDetail', body));
+    }
+    function drawDetail(iso, el){
+      const logs = state.sportLogs[iso] || {};
+      const exRows = state.exercises.map(ex => {
+        const sets = logs[ex.id] || [];
+        if(!sets.length) return null;
+        return `<div class="minirow"><div class="l">${escapeHtml(ex.name)}</div><div class="r">${sets.join(' · ')} = ${sets.reduce((a,b)=>a+b,0)}</div></div>`;
+      }).filter(Boolean).join('');
+      const woRows = state.workouts.filter(w=>w.date===iso).map(w =>
+        `<div class="minirow"><div class="l">${escapeHtml(w.name)}</div><div class="r">${w.duration?w.duration+' мин':''}${w.note?' · '+escapeHtml(w.note):''}</div></div>`
+      ).join('');
+      el.innerHTML = `<div class="section-title" style="margin-top:0"><h2>${fmtHuman(iso)}</h2></div>` +
+        (exRows || woRows ? exRows + woRows : `<div class="empty">В этот день активности не было</div>`);
+    }
+    draw();
+  });
+}
+
 function addRep(exId, n){
   const t = todayISO();
   if(!state.sportLogs[t]) state.sportLogs[t] = {};
