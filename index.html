@@ -147,10 +147,12 @@
   .cal-nav{background:var(--surface); border:1px solid var(--border); width:34px; height:34px; border-radius:50%; color:var(--text); display:flex; align-items:center; justify-content:center;}
   .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:5px;}
   .cal-dow{text-align:center; font-size:11px; color:var(--text-faint); font-weight:700; padding-bottom:4px;}
-  .cal-cell{aspect-ratio:1; border-radius:11px; background:var(--surface); border:1px solid var(--border); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; font-size:13px; position:relative; color:var(--text-muted); box-shadow:var(--shadow);}
-  .cal-cell.faded{opacity:.28;}
+  .cal-cell{aspect-ratio:1; border-radius:11px; background:var(--surface); border:1px solid var(--border); position:relative; color:var(--text-muted); box-shadow:var(--shadow); font-size:13px;}
+  .cal-cell.faded{opacity:.28; display:flex; align-items:center; justify-content:center;}
   .cal-cell.today{border-color:var(--work); color:var(--text); font-weight:800;}
-  .cal-dots{display:flex; gap:2px; position:absolute; bottom:5px;}
+  .cal-daynum{position:absolute; top:6px; left:7px; font-size:12px;}
+  .cal-rating{position:absolute; top:5px; right:6px; font-size:9.5px; font-weight:700; color:var(--journal);}
+  .cal-dots{display:flex; gap:2px; position:absolute; bottom:5px; left:50%; transform:translateX(-50%);}
   .cal-dots i{width:4.5px; height:4.5px; border-radius:50%; display:block;}
 
   /* ---- habits ---- */
@@ -1196,9 +1198,10 @@ function renderCalendar(){
           return allDone
             ? `<i style="background:${color};"></i>`
             : `<i style="background:transparent; border:1.5px solid ${color};"></i>`;
-        }).join('') + ((jr && !jr.photo) ? `<i style="background:var(--journal)"></i>` : '');
+        }).join('');
         return `<button class="cal-cell ${isToday?'today':''}" data-day="${c.iso}" ${coverStyle}>
-          ${c.day}
+          <span class="cal-daynum">${c.day}</span>
+          ${jr ? `<span class="cal-rating" style="${jr.photo?'color:#fff; text-shadow:0 1px 3px rgba(0,0,0,.6);':''}">★${jr.rating}</span>` : ''}
           <div class="cal-dots">${dots}</div>
         </button>`;
       }).join('')}
@@ -1326,6 +1329,7 @@ function openDayDetail(iso){
     ${ jr ? `
       <div class="section-title"><h2 style="color:var(--journal)">Дневник</h2></div>
       <div class="card">
+        ${jr.photo ? `<img src="${jr.photo}" style="width:100%; border-radius:12px; margin-bottom:10px; display:block;">` : ''}
         <div class="journal-hist-row" style="border:none; padding:0;">
           <div class="jhstars">${'★'.repeat(jr.rating)}${'☆'.repeat(5-jr.rating)}</div>
           <p>${escapeHtml(jr.text)||'<span style=\"color:var(--text-faint)\">без заметки</span>'}</p>
