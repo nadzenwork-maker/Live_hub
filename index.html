@@ -446,20 +446,23 @@ async function diagnoseSupabase(){
 }
 
 async function loadKey(key, fallback){
-  // сначала пробуем облако, но если не вышло — берём последнюю сохранённую локальную копию (актуальнее, чем ничего)
+  // 1. пробуем Supabase, если он сейчас основной режим
   if(storageMode==='supabase'){
     try{
       const value = await sbGet(key);
       if(value !== null){ localSet(key, value); return JSON.parse(value); }
-    }catch(e){ /* переходим к локальному кешу ниже */ }
-    const cached = localGet(key);
-    if(cached !== null) return JSON.parse(cached);
-    return fallback;
+    }catch(e){ /* переходим ниже */ }
   }
+  // 2. пробуем хранилище Claude, если оно вообще доступно (превью в чате)
   if(typeof window.storage !== 'undefined'){
-    try{ const r = await window.storage.get(key); return r ? JSON.parse(r.value) : fallback; }
-    catch(e){ return fallback; }
+    try{
+      const r = await window.storage.get(key);
+      if(r){ localSet(key, r.value); return JSON.parse(r.value); }
+    }catch(e){ /* переходим ниже */ }
   }
+  // 3. в любом случае — локальный кеш на этом телефоне, это последний и самый надёжный рубеж
+  const cached = localGet(key);
+  if(cached !== null) return JSON.parse(cached);
   return fallback;
 }
 let syncStatus = 'saved';
@@ -485,6 +488,7 @@ async function saveKey(key, value){
     try{
       if(storageMode==='supabase') await sbSet(key, json);
       else if(typeof window.storage !== 'undefined'){ const r = await window.storage.set(key, json); if(!r) throw new Error('empty result'); }
+      else throw new Error('no remote storage available'); // данные всё равно уже в локальном кеше выше
       pendingKeys.delete(key);
       setSyncStatus('saved'); return;
     }catch(e){
@@ -498,7 +502,13 @@ async function saveKey(key, value){
   }
 }
 function retryAllSaves(){ persistTasks(); persistHabits(); persistSport(); persistJournal(); persistGoals(); persistSettings(); }
-window.addEventListener('online', ()=>{ if(pendingKeys.size) retryAllSaves(); });
+window.addEventListener('online', async ()=>{
+  if(storageMode!=='supabase'){
+    const ok = await testSupabase();
+    if(ok) storageMode = 'supabase';
+  }
+  if(pendingKeys.size) retryAllSaves();
+});
 
 function defaultLists(){
   return [
