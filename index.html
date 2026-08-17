@@ -789,6 +789,7 @@ function openTaskModal({ type, date, list, task=null }){
     });
     if(task){
       $('#mf-delete', root).addEventListener('click', ()=>{
+        if(!confirm(`Удалить задачу «${draft.text}»?`)) return;
         state.tasks = state.tasks.filter(t=>t.id!==draft.id);
         persistTasks(); closeModal(); renderActive();
       });
@@ -890,6 +891,8 @@ function bindTaskRowEvents(root){
     const t = state.tasks.find(x=>x.id===el.dataset.open); openTaskModal({ type:t.type, task:t });
   }));
   $$('[data-del]', root).forEach(b => b.addEventListener('click', ()=>{
+    const tsk = state.tasks.find(x=>x.id===b.dataset.del);
+    if(!confirm(`Удалить задачу «${tsk.text}»?`)) return;
     state.tasks = state.tasks.filter(x=>x.id!==b.dataset.del); persistTasks(); renderActive();
   }));
 }
@@ -1710,6 +1713,8 @@ function bindDayModalRow(root, iso){
     const t = state.tasks.find(x=>x.id===el.dataset.open); closeModal(); openTaskModal({ type:t.type, task:t });
   }));
   $$('[data-del]', root).forEach(b => b.addEventListener('click', ()=>{
+    const tsk = state.tasks.find(x=>x.id===b.dataset.del);
+    if(!confirm(`Удалить задачу «${tsk.text}»?`)) return;
     state.tasks = state.tasks.filter(x=>x.id!==b.dataset.del); persistTasks(); openDayDetail(iso);
   }));
 }
