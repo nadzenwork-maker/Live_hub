@@ -97,6 +97,9 @@
   .chip.sub{background:transparent; border:1px solid var(--border);}
   svg{width:18px; height:18px; flex-shrink:0; display:block;}
   .delbtn svg{width:16px; height:16px;}
+  .reorder-btn{background:none; border:none; color:var(--text-faint); padding:1px; flex:0 0 auto;}
+  .reorder-btn svg{width:14px; height:14px;}
+  .reorder-btn:disabled{opacity:.25;}
   .delbtn{background:none; border:none; color:var(--text-faint); padding:4px; flex:0 0 auto;}
   .addslot{
     display:flex; align-items:center; gap:10px; padding:10px 0; color:var(--text-faint);
@@ -106,10 +109,6 @@
   .addslot:last-child{border-bottom:none;}
   .addslot .plusring{width:20px; height:20px; border-radius:50%; border:2px dashed var(--text-faint); flex:0 0 20px; display:flex; align-items:center; justify-content:center; font-size:13px;}
 
-  /* ---- inbox ---- */
-  .inbox-toggle{width:100%; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:12px 14px; display:flex; justify-content:space-between; align-items:center; color:var(--text); margin-bottom:12px;}
-  .inbox-body{display:none;}
-  .inbox-body.open{display:block;}
   .inbox-tabs{display:flex; gap:8px; margin:10px 0 8px;}
   .pill{padding:6px 14px; border-radius:20px; font-size:13px; font-weight:700; border:1px solid var(--border); background:var(--surface); color:var(--text-muted);}
   .pill.active.work{background:var(--work-dim); color:var(--work); border-color:var(--work);}
@@ -117,9 +116,6 @@
   .quickadd{display:flex; gap:8px; margin-bottom:8px;}
   .quickadd input{flex:1; background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:9px 12px; color:var(--text);}
   .quickadd button{background:var(--work); border:none; border-radius:var(--radius-sm); padding:0 14px; color:#1E1A22; font-weight:800;}
-  .inboxrow{display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px dashed var(--border);}
-  .inboxrow span{flex:1; font-size:14px;}
-  .iconbtn{background:var(--surface2); border:1px solid var(--border); border-radius:8px; width:30px; height:30px; display:flex; align-items:center; justify-content:center; color:var(--text-muted); flex:0 0 auto;}
 
   /* ---- buttons generic ---- */
   .btn{background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px 14px; color:var(--text); font-weight:700; font-size:14px;}
@@ -135,9 +131,9 @@
     padding:8px 4px calc(6px + env(safe-area-inset-bottom));
   }
   nav.bottom .navwrap{max-width:var(--app-max); margin:0 auto; display:flex; justify-content:space-around;}
-  .navbtn{background:none; border:none; display:flex; flex-direction:column; align-items:center; gap:3px; color:var(--text-faint); padding:4px 2px; width:60px;}
+  .navbtn{background:none; border:none; display:flex; flex-direction:column; align-items:center; gap:3px; color:var(--text-faint); padding:4px 2px; flex:1; min-width:0;}
   .navbtn svg{width:21px; height:21px; transition:.15s;}
-  .navbtn span{font-size:10px; font-weight:700;}
+  .navbtn span{font-size:9.5px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
   .navbtn.active{color:var(--text);}
   .navbtn.active svg{transform:translateY(-1px);}
 
@@ -147,13 +143,26 @@
   .cal-nav{background:var(--surface); border:1px solid var(--border); width:34px; height:34px; border-radius:50%; color:var(--text); display:flex; align-items:center; justify-content:center;}
   .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:5px;}
   .cal-dow{text-align:center; font-size:11px; color:var(--text-faint); font-weight:700; padding-bottom:4px;}
-  .cal-cell{aspect-ratio:1; border-radius:11px; background:var(--surface); border:1px solid var(--border); position:relative; color:var(--text-muted); box-shadow:var(--shadow); font-size:13px;}
-  .cal-cell.faded{opacity:.28; display:flex; align-items:center; justify-content:center;}
+  .cal-cell{aspect-ratio:1; border-radius:11px; background:var(--surface); border:1px solid var(--border); position:relative; color:var(--text-muted); box-shadow:var(--shadow); font-size:13px; cursor:pointer;}
+  .cal-cell.faded{opacity:.28; display:flex; align-items:center; justify-content:center; cursor:default;}
   .cal-cell.today{border-color:var(--work); color:var(--text); font-weight:800;}
   .cal-daynum{position:absolute; top:6px; left:7px; font-size:12px;}
   .cal-rating{position:absolute; top:5px; right:6px; font-size:9.5px; font-weight:700; color:var(--journal);}
-  .cal-dots{display:flex; gap:2px; position:absolute; bottom:5px; left:50%; transform:translateX(-50%);}
-  .cal-dots i{width:4.5px; height:4.5px; border-radius:50%; display:block;}
+  .cal-dots{display:flex; gap:2px; position:absolute; bottom:2px; left:50%; transform:translateX(-50%);}
+  .dot-btn{width:13px; height:13px; padding:0; background:none; border:none; display:flex; align-items:center; justify-content:center; cursor:pointer;}
+  .dot-btn i{width:4.5px; height:4.5px; border-radius:50%; display:block;}
+  .cal2w-wrap{overflow-x:auto; -webkit-overflow-scrolling:touch; border-radius:12px; border:1px solid var(--border);}
+  .cal2w-grid{display:grid; grid-template-columns:repeat(7, minmax(96px,1fr)); width:max-content; min-width:100%; background:var(--border); gap:1px;}
+  .cal2w-dow{background:var(--surface2); text-align:center; font-size:10.5px; font-weight:700; color:var(--text-faint); padding:8px 0;}
+  .cal2w-cell{background:var(--surface); min-height:108px; padding:6px 5px; position:relative; cursor:pointer;}
+  .cal2w-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;}
+  .cal2w-daynum{font-size:11px; font-weight:700; color:var(--text-muted);}
+  .cal2w-daynum.today{background:var(--work); color:#fff; padding:1px 6px; border-radius:9px;}
+  .cal2w-item{font-size:9.5px; font-weight:700; padding:2px 5px; border-radius:4px; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer;}
+  .cal2w-item.done{opacity:.45; text-decoration:line-through;}
+  .cal2w-more{font-size:9px; color:var(--text-faint); font-weight:700; cursor:pointer;}
+  .cal2w-add{background:none; border:1px dashed var(--border); border-radius:6px; width:100%; color:var(--text-faint); padding:3px 0; margin-top:2px;}
+  .cal2w-add svg{width:11px; height:11px;}
 
   /* ---- habits ---- */
   .habitcard{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:12px 14px; margin-bottom:10px; box-shadow:var(--shadow);}
@@ -261,6 +270,10 @@
   .kcard .kctext.done{color:var(--text-faint); text-decoration:line-through;}
   .kcard .kcmeta{display:flex; flex-wrap:wrap; gap:4px; margin-top:5px;}
   .kanban-addcol{min-width:170px; max-width:170px; flex:0 0 auto; background:transparent; border:2px dashed var(--border); border-radius:var(--radius); color:var(--text-faint); font-size:13px; font-weight:700;}
+  .kanban-col.drop-target{border-color:var(--goal); box-shadow:0 0 0 2px var(--goal-dim); background:var(--goal-dim);}
+  .kanban-drop-marker{height:3px; border-radius:2px; background:var(--goal); margin:2px 0 5px;}
+  .kcard-grip{cursor:grab; touch-action:none;}
+  .kcard-grip svg{width:14px; height:14px;}
 
   /* ---- day sheet extras ---- */
   .habit-check-row{display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px dashed var(--border);}
@@ -350,6 +363,7 @@
     <div class="tabpanel" id="tab-habits"></div>
     <div class="tabpanel" id="tab-sport"></div>
     <div class="tabpanel" id="tab-goals"></div>
+    <div class="tabpanel" id="tab-retro"></div>
   </main>
 
   <nav class="bottom">
@@ -391,6 +405,8 @@ function icon(name, cls=''){
     trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
     check: '<path d="M4 12l6 6L20 6"/>',
     chevLeft: '<path d="M15 5l-7 7 7 7"/>',
+    chevUp: '<path d="M5 15l7-7 7 7"/>',
+    chevDown: '<path d="M5 9l7 7 7-7"/>',
     chevRight: '<path d="M9 5l7 7-7 7"/>',
     x: '<path d="M6 6l12 12M18 6L6 18"/>',
     arrowRight: '<path d="M5 12h14M13 6l6 6-6 6"/>',
@@ -398,7 +414,7 @@ function icon(name, cls=''){
     star: '<path d="M12 2l2.9 6.6 7.1.7-5.4 4.7 1.7 7-6.3-3.9L5.7 21l1.7-7L2 9.3l7.1-.7z"/>',
     list: '<path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4" cy="6" r="1.4" fill="currentColor"/><circle cx="4" cy="12" r="1.4" fill="currentColor"/><circle cx="4" cy="18" r="1.4" fill="currentColor"/>',
     camera: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="14" r="3.3"/>',
-    settings: '<circle cx="12" cy="12" r="3"/><path d="M4 12h2M18 12h2M12 4v2M12 18v2M6.3 6.3l1.4 1.4M16.3 16.3l1.4 1.4M17.7 6.3l-1.4 1.4M7.7 16.3l-1.4 1.4"/>',
+    settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>',
     download: '<path d="M12 3v12M7 11l5 5 5-5M5 21h14"/>',
     upload: '<path d="M12 21V9M7 13l5-5 5 5M5 3h14"/>',
     edit: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/>'
@@ -526,7 +542,7 @@ async function saveKey(key, value){
     }
   }
 }
-function retryAllSaves(){ persistTasks(); persistHabits(); persistSport(); persistJournal(); persistGoals(); persistSettings(); }
+function retryAllSaves(){ persistTasks(); persistHabits(); persistSport(); persistJournal(); persistGoals(); persistSettings(); persistRetro(); }
 window.addEventListener('online', async ()=>{
   if(storageMode!=='supabase'){
     const ok = await testSupabase();
@@ -551,6 +567,9 @@ function getListColor(listId){
   const l = state.lists.find(x=>x.id===listId);
   return l ? l.color : '#5C6BAA';
 }
+function newTaskOrder(){ return -Date.now(); }
+function taskOrderVal(t){ return t.order!==undefined ? t.order : -(t.createdAt||0); }
+function sortByOrder(arr){ return [...arr].sort((a,b)=> taskOrderVal(a)-taskOrderVal(b)); }
 
 const state = {
   tasks: [], lists: defaultLists(),
@@ -558,7 +577,8 @@ const state = {
   exercises: [], sportLogs: {}, workouts: [], measurements: [],
   journal: [],
   goalsMonthly: [], goalsWeekly: [],
-  otherColor: '#5C6BAA'
+  otherColor: '#5C6BAA',
+  retros: []
 };
 
 const persistTasks  = debounce(()=> saveKey('tasks-data',  { tasks: state.tasks, lists: state.lists }), 350);
@@ -567,15 +587,41 @@ const persistSport   = debounce(()=> saveKey('sport-data',  { exercises: state.e
 const persistJournal = debounce(()=> saveKey('journal-data',{ journal: state.journal }), 350);
 const persistGoals   = debounce(()=> saveKey('goals-data',  { goalsMonthly: state.goalsMonthly, goalsWeekly: state.goalsWeekly }), 350);
 const persistSettings = debounce(()=> saveKey('settings-data', { otherColor: state.otherColor }), 350);
+const persistRetro = debounce(()=> saveKey('retro-data', { retros: state.retros }), 350);
 
+function normalizeTasksAndLists(){
+  // ensure every task has a list field (older tasks predating lists) + defaults for newer fields
+  state.tasks.forEach(task => {
+    if(!task.list) task.list = task.type || 'inbox';
+    if(task.recur === undefined) task.recur = null;
+    if(task.carryCount === undefined) task.carryCount = 0;
+    if(task.order === undefined) task.order = -(task.createdAt||Date.now());
+    (task.subtasks||[]).forEach(s => { if(s.date===undefined) s.date=null; if(!s.tags) s.tags=[]; });
+  });
+  // ensure every list has a color; one-time migration from the old default palette to the new one
+  const defaults = defaultLists();
+  const OLD_DEFAULTS = { inbox:'#9077BB', work:'#D68A3A', home:'#CD7C60' };
+  state.lists.forEach((l,i) => {
+    const def = defaults.find(d=>d.id===l.id);
+    if(def && (!l.color || l.color === OLD_DEFAULTS[l.id])) l.color = def.color;
+    else if(!l.color) l.color = LIST_COLOR_PALETTE[i % LIST_COLOR_PALETTE.length];
+  });
+}
+function normalizeHabits(){
+  state.habits.forEach((hb,i) => {
+    if(!hb.color) hb.color = LIST_COLOR_PALETTE[i % LIST_COLOR_PALETTE.length];
+    if(hb.archived===undefined) hb.archived = false;
+  });
+}
 async function loadAll(){
-  const [t, h, s, j, g, st] = await Promise.all([
+  const [t, h, s, j, g, st, rt] = await Promise.all([
     loadKey('tasks-data', null),
     loadKey('habits-data', null),
     loadKey('sport-data', null),
     loadKey('journal-data', null),
     loadKey('goals-data', null),
     loadKey('settings-data', null),
+    loadKey('retro-data', null),
   ]);
   if(t){
     state.tasks = t.tasks || [];
@@ -586,32 +632,17 @@ async function loadAll(){
         state.tasks.push({ id:item.id||uid(), type:k, list:'inbox', text:item.text, date:null, tags:[], subtasks:[], done:false, createdAt:item.createdAt||Date.now() });
       }));
     }
-    // ensure every task has a list field (older tasks predating lists)
-    state.tasks.forEach(task => {
-      if(!task.list) task.list = task.type || 'inbox';
-      if(task.recur === undefined) task.recur = null;
-      (task.subtasks||[]).forEach(s => { if(s.date===undefined) s.date=null; if(!s.tags) s.tags=[]; });
-    });
-    // ensure every list has a color; one-time migration from the old default palette to the new one
-    const defaults = defaultLists();
-    const OLD_DEFAULTS = { inbox:'#9077BB', work:'#D68A3A', home:'#CD7C60' };
-    state.lists.forEach((l,i) => {
-      const def = defaults.find(d=>d.id===l.id);
-      if(def && (!l.color || l.color === OLD_DEFAULTS[l.id])) l.color = def.color;
-      else if(!l.color) l.color = LIST_COLOR_PALETTE[i % LIST_COLOR_PALETTE.length];
-    });
+    normalizeTasksAndLists();
   }
   if(h){
     state.habits=h.habits||[]; state.habitEntries=h.habitEntries||{};
-    state.habits.forEach((hb,i) => {
-      if(!hb.color) hb.color = LIST_COLOR_PALETTE[i % LIST_COLOR_PALETTE.length];
-      if(hb.archived===undefined) hb.archived = false;
-    });
+    normalizeHabits();
   }
   if(s){ state.exercises=s.exercises||[]; state.sportLogs=s.sportLogs||{}; state.workouts=s.workouts||[]; state.measurements=s.measurements||[]; }
   if(j){ state.journal=j.journal||[]; }
   if(g){ state.goalsMonthly=g.goalsMonthly||[]; state.goalsWeekly=g.goalsWeekly||[]; }
   if(st && st.otherColor){ state.otherColor = st.otherColor; }
+  if(rt){ state.retros = rt.retros || []; state.retros.forEach(r => { if(r.highlight===undefined) r.highlight=''; }); }
 }
 
 /* ============================= NAV / ROUTER ============================= */
@@ -622,12 +653,16 @@ const TABS = [
   { id:'habits', label:'Привычки', icon:'flame', title:'Привычки' },
   { id:'sport', label:'Спорт', icon:'dumbbell', title:'Спорт' },
   { id:'goals', label:'Цели', icon:'target', title:'Цели' },
+  { id:'retro', label:'Ретро', icon:'book', title:'Ретро' },
 ];
 let activeTab = 'day';
 let calMonth = monthKey(todayISO());
 let habitsMonthCursor = monthKey(todayISO());
 let goalsMonthCursor = monthKey(todayISO());
 let goalsWeekCursor = weekStartISO(todayISO());
+let retroMode = 'week';
+let retroWeekCursor = weekStartISO(todayISO());
+let retroMonthCursor = monthKey(todayISO());
 
 function renderNav(){
   const wrap = $('#navwrap');
@@ -648,7 +683,7 @@ function switchTab(id){
 }
 function renderActive(){
   ({ day: renderDay, tasks: renderTasks, calendar: renderCalendar, habits: renderHabits,
-     sport: renderSport, goals: renderGoals })[activeTab]();
+     sport: renderSport, goals: renderGoals, retro: renderRetro })[activeTab]();
 }
 function renderAllHeader(){
   const d = new Date();
@@ -669,7 +704,7 @@ $('#modalBackdrop').addEventListener('click', e => { if(e.target.id==='modalBack
 /* ---- Task modal (create/edit) ---- */
 function openTaskModal({ type, date, list, task=null }){
   const draft = task ? JSON.parse(JSON.stringify(task)) : {
-    id: uid(), type: type||null, list: list || type || 'inbox', text:'', date: date || null, tags:[], subtasks:[], done:false, createdAt: Date.now(), recur: null
+    id: uid(), type: type||null, list: list || type || 'inbox', text:'', date: date || null, tags:[], subtasks:[], done:false, createdAt: Date.now(), recur: null, carryCount:0, order: newTaskOrder()
   };
   if(draft.recur === undefined) draft.recur = null;
   const accent = getListColor(draft.list);
@@ -775,7 +810,15 @@ function toggleTaskDone(tsk){
     clone.done = false;
     clone.date = nextRecurDate(tsk.date, tsk.recur);
     clone.createdAt = Date.now();
-    clone.subtasks = (clone.subtasks||[]).map(s => ({ ...s, done:false }));
+    const deltaMs = tsk.date ? (parseISO(clone.date) - parseISO(tsk.date)) : 0;
+    clone.subtasks = (clone.subtasks||[]).map(s => ({
+      ...s,
+      id: uid(),
+      done: false,
+      date: s.date ? isoDate(new Date(parseISO(s.date).getTime()+deltaMs)) : null
+    }));
+    clone.carryCount = 0;
+    clone.order = newTaskOrder();
     state.tasks.push(clone);
   }
 }
@@ -817,7 +860,7 @@ function renamePrompt(current){
 }
 
 /* ============================= TASK ROW RENDER ============================= */
-function taskRowHTML(t){
+function taskRowHTML(t, opts={}){
   const subDone = t.subtasks.filter(s=>s.done).length;
   const accent = getListColor(t.list);
   return `
@@ -830,6 +873,12 @@ function taskRowHTML(t){
         ${t.subtasks.length ? `<span class="chip sub">${subDone}/${t.subtasks.length} подзадач</span>` : ''}
       </div>
     </div>
+    ${opts.reorder ? `
+      <div style="display:flex; flex-direction:column; gap:1px;">
+        <button class="reorder-btn" data-moveup="${t.id}" data-bucket="${opts.bucket}" ${opts.isFirst?'disabled':''}>${icon('chevUp')}</button>
+        <button class="reorder-btn" data-movedown="${t.id}" data-bucket="${opts.bucket}" ${opts.isLast?'disabled':''}>${icon('chevDown')}</button>
+      </div>
+    ` : ''}
     <button class="delbtn" data-del="${t.id}">${icon('x')}</button>
   </div>`;
 }
@@ -873,18 +922,23 @@ function bindSubtaskRowEvents(root){
 /* ============================= DAY TAB (единый лист) ============================= */
 function renderDay(){
   const t = todayISO();
-  // переносим незавершённые задачи с прошлых дней на сегодня
+  // переносим незавершённые задачи с прошлых дней на сегодня — Работа/Дом/Другое, без исключений
   let moved = false;
   state.tasks.forEach(x => {
-    if((x.type==='work'||x.type==='home') && x.date && x.date < t && !x.done){
-      x.date = t; moved = true;
+    if(x.date && x.date < t && !x.done){
+      x.date = t;
+      x.carryCount = (x.carryCount||0) + 1;
+      moved = true;
     }
+    (x.subtasks||[]).forEach(s => {
+      if(s.date && s.date < t && !s.done){ s.date = t; moved = true; }
+    });
   });
   if(moved) persistTasks();
 
-  const work = state.tasks.filter(x=>x.type==='work' && x.date===t);
-  const home = state.tasks.filter(x=>x.type==='home' && x.date===t);
-  const other = state.tasks.filter(x=>x.type===null && x.date===t);
+  const work = sortByOrder(state.tasks.filter(x=>x.type==='work' && x.date===t));
+  const home = sortByOrder(state.tasks.filter(x=>x.type==='home' && x.date===t));
+  const other = sortByOrder(state.tasks.filter(x=>x.type===null && x.date===t));
   const subToday = [];
   state.tasks.forEach(pt => (pt.subtasks||[]).forEach(s => { if(s.date===t) subToday.push({ parent: pt, sub: s }); }));
   const subWork = subToday.filter(x=>x.parent.type==='work');
@@ -896,7 +950,7 @@ function renderDay(){
     <div class="day-top-grid">
       <div>
         <div class="section-title" style="margin-top:6px">
-          <h2><span class="accent-dot" style="background:var(--work)"></span>Работа</h2>
+          <h2><span class="accent-dot" style="background:${getListColor('work')}"></span>Работа</h2>
           <span class="count">${work.length + subWork.length}</span>
         </div>
         <div class="slotlist" id="workSlots"></div>
@@ -904,7 +958,7 @@ function renderDay(){
 
       <div>
         <div class="section-title" style="margin-top:6px">
-          <h2><span class="accent-dot" style="background:var(--home)"></span>Дом</h2>
+          <h2><span class="accent-dot" style="background:${getListColor('home')}"></span>Дом</h2>
           <span class="count">${home.length + subHome.length}</span>
         </div>
         <div class="slotlist" id="homeSlots"></div>
@@ -947,11 +1001,26 @@ function renderDay(){
   $('#tab-day').innerHTML = html;
 
   const workEl = $('#workSlots'), homeEl = $('#homeSlots'), otherEl = $('#otherSlots');
-  workEl.innerHTML = work.map(taskRowHTML).join('') + subWork.map(x=>subtaskRowHTML(x.parent,x.sub)).join('') + `<button class="addslot" data-addtask="work"><span class="plusring">+</span>Добавить рабочую задачу</button>`;
-  homeEl.innerHTML = home.map(taskRowHTML).join('') + subHome.map(x=>subtaskRowHTML(x.parent,x.sub)).join('') + `<button class="addslot" data-addtask="home"><span class="plusring">+</span>Добавить домашнее дело</button>`;
-  otherEl.innerHTML = other.map(taskRowHTML).join('') + subOther.map(x=>subtaskRowHTML(x.parent,x.sub)).join('') + `<button class="addslot" data-addother="1"><span class="plusring">+</span>Добавить задачу из другого списка</button>`;
+  const rowHtml = (arr, bucket) => arr.map((tsk,i) => taskRowHTML(tsk, { reorder:true, bucket, isFirst:i===0, isLast:i===arr.length-1 })).join('');
+  workEl.innerHTML = rowHtml(work,'work') + subWork.map(x=>subtaskRowHTML(x.parent,x.sub)).join('') + `<button class="addslot" data-addtask="work"><span class="plusring">+</span>Добавить рабочую задачу</button>`;
+  homeEl.innerHTML = rowHtml(home,'home') + subHome.map(x=>subtaskRowHTML(x.parent,x.sub)).join('') + `<button class="addslot" data-addtask="home"><span class="plusring">+</span>Добавить домашнее дело</button>`;
+  otherEl.innerHTML = rowHtml(other,'other') + subOther.map(x=>subtaskRowHTML(x.parent,x.sub)).join('') + `<button class="addslot" data-addother="1"><span class="plusring">+</span>Добавить задачу из другого списка</button>`;
   bindTaskRowEvents(workEl); bindTaskRowEvents(homeEl); bindTaskRowEvents(otherEl);
   bindSubtaskRowEvents(workEl); bindSubtaskRowEvents(homeEl); bindSubtaskRowEvents(otherEl);
+  const buckets = { work, home, other };
+  function bindReorder(root){
+    $$('[data-moveup]', root).forEach(b => b.addEventListener('click', ()=>{
+      const arr = buckets[b.dataset.bucket];
+      const i = arr.findIndex(x=>x.id===b.dataset.moveup);
+      if(i>0){ const tmp=arr[i].order; arr[i].order=arr[i-1].order; arr[i-1].order=tmp; persistTasks(); renderDay(); }
+    }));
+    $$('[data-movedown]', root).forEach(b => b.addEventListener('click', ()=>{
+      const arr = buckets[b.dataset.bucket];
+      const i = arr.findIndex(x=>x.id===b.dataset.movedown);
+      if(i<arr.length-1){ const tmp=arr[i].order; arr[i].order=arr[i+1].order; arr[i+1].order=tmp; persistTasks(); renderDay(); }
+    }));
+  }
+  bindReorder(workEl); bindReorder(homeEl); bindReorder(otherEl);
   $$('[data-addtask]').forEach(b => b.addEventListener('click', ()=> openTaskModal({ type:b.dataset.addtask, list:b.dataset.addtask, date:t })));
   $('[data-addother]').addEventListener('click', ()=> openTaskModal({ date:t }));
 
@@ -1020,7 +1089,7 @@ function renderDay(){
 function addDayInboxItem(){
   const inp = $('#dayInboxInput');
   if(!inp.value.trim()) return;
-  state.tasks.push({ id: uid(), type:null, list:'inbox', text: inp.value.trim(), date:null, tags:[], subtasks:[], done:false, createdAt: Date.now(), recur:null });
+  state.tasks.push({ id: uid(), type:null, list:'inbox', text: inp.value.trim(), date:null, tags:[], subtasks:[], done:false, createdAt: Date.now(), recur:null, carryCount:0, order:newTaskOrder() });
   inp.value=''; persistTasks();
 }
 function compressImage(file, maxW=640, quality=0.6){
@@ -1046,19 +1115,42 @@ function compressImage(file, maxW=640, quality=0.6){
 /* ============================= TASKS TAB (списки, как в Trello) ============================= */
 let expandedCards = new Set();
 let showDoneInList = new Set();
+let taskSearchQuery = '';
+let bulkMode = false;
+let bulkSelected = new Set();
+let dragState = null;
+let measurementChartMetric = 'weight';
+let newExerciseUnit = 'reps';
+function fmtDuration(sec){
+  if(sec<60) return `${sec}с`;
+  const m = Math.floor(sec/60), s = sec%60;
+  return `${m}:${pad2(s)}`;
+}
+function taskMatchesSearch(t, q){
+  if(!q) return true;
+  const ql = q.toLowerCase();
+  return t.text.toLowerCase().includes(ql) || t.tags.some(tag=>tag.toLowerCase().includes(ql));
+}
 function renderTasks(){
   const html = `
+    <div class="quickadd" style="margin:6px 0 4px;">
+      <input type="text" id="taskSearchInput" placeholder="Поиск по тексту или тегу…" value="${escapeHtml(taskSearchQuery)}">
+      <button id="bulkModeBtn" class="btn small" style="${bulkMode?`background:var(--goal); color:#fff; border-color:var(--goal);`:''}">${bulkMode?'Готово':'Выбрать'}</button>
+    </div>
+    <div id="bulkActionBar"></div>
     <div class="kanban-board" id="kanbanBoard"></div>
   `;
   $('#tab-tasks').innerHTML = html;
   const board = $('#kanbanBoard');
+
+  const q = taskSearchQuery.trim();
   board.innerHTML = state.lists.map(l => {
-    const allItems = state.tasks.filter(x=>x.list===l.id);
-    const active = allItems.filter(x=>!x.done);
-    const done = allItems.filter(x=>x.done);
+    const allItems = state.tasks.filter(x=>x.list===l.id && taskMatchesSearch(x,q));
+    const active = sortByOrder(allItems.filter(x=>!x.done));
+    const done = sortByOrder(allItems.filter(x=>x.done));
     const showDone = showDoneInList.has(l.id);
     return `
-    <div class="kanban-col">
+    <div class="kanban-col" data-listid="${l.id}">
       <div class="kanban-col-head">
         <b data-listrename="${l.id}" style="cursor:pointer">${escapeHtml(l.name)}</b>
         <div class="row-gap" style="align-items:center; gap:6px;">
@@ -1071,12 +1163,23 @@ function renderTasks(){
         <button data-qadd="${l.id}">${icon('plus')}</button>
       </div>
       <div class="kanban-cards">
-        ${active.length ? active.map(cardHTML).join('') : `<div class="empty" style="padding:10px 0">Пусто</div>`}
+        <div class="kanban-active-cards">
+          ${active.length ? active.map(cardHTML).join('') : `<div class="empty" style="padding:10px 0">${q?'Нет совпадений':'Пусто'}</div>`}
+        </div>
         ${done.length ? `<button class="btn small" data-toggledone="${l.id}" style="width:100%; margin:6px 0;">${showDone?'Скрыть':'Показать'} выполненные (${done.length})</button>` : ''}
         ${showDone ? done.map(cardHTML).join('') : ''}
       </div>
     </div>`;
   }).join('') + `<button class="kanban-addcol" id="addListBtn">${icon('plus')} Новый список</button>`;
+
+  $('#taskSearchInput').addEventListener('input', e => {
+    taskSearchQuery = e.target.value;
+    renderTasks();
+    const newInp = $('#taskSearchInput');
+    if(newInp){ newInp.focus(); const p = newInp.value.length; newInp.setSelectionRange(p,p); }
+  });
+  $('#bulkModeBtn').addEventListener('click', ()=>{ bulkMode = !bulkMode; bulkSelected.clear(); renderTasks(); });
+  drawBulkBar();
 
   $$('[data-qadd]', board).forEach(b => b.addEventListener('click', ()=> quickAddToList(b.dataset.qadd)));
   $$('[id^="qa-"]', board).forEach(inp => inp.addEventListener('keydown', e=>{
@@ -1084,6 +1187,11 @@ function renderTasks(){
   }));
   $$('[data-expand]', board).forEach(el => el.addEventListener('click', ()=>{
     const id = el.dataset.expand;
+    if(bulkMode){
+      if(bulkSelected.has(id)) bulkSelected.delete(id); else bulkSelected.add(id);
+      renderTasks();
+      return;
+    }
     if(expandedCards.has(id)) expandedCards.delete(id); else expandedCards.add(id);
     renderTasks();
   }));
@@ -1117,16 +1225,132 @@ function renderTasks(){
     const name = prompt('Название списка');
     if(name && name.trim()){ state.lists.push({ id: uid(), name: name.trim(), builtin:false }); persistTasks(); renderTasks(); }
   });
+
+  if(!bulkMode) attachDragHandlers(board);
+}
+function drawBulkBar(){
+  const bar = $('#bulkActionBar');
+  if(!bar) return;
+  if(!bulkMode || !bulkSelected.size){ bar.innerHTML=''; return; }
+  bar.innerHTML = `
+    <div class="card" style="display:flex; align-items:center; gap:8px; padding:10px 12px; margin-bottom:10px; border-color:var(--goal);">
+      <span style="font-weight:700; font-size:13px; white-space:nowrap;">${bulkSelected.size} выбрано</span>
+      <select id="bulkMoveSelect" style="flex:1; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:7px; color:var(--text); font-size:12.5px;">
+        ${state.lists.map(l=>`<option value="${l.id}">${escapeHtml(l.name)}</option>`).join('')}
+      </select>
+      <button class="btn small" id="bulkMoveBtn">Перенести</button>
+      <button class="delbtn" id="bulkDeleteBtn">${icon('trash')}</button>
+    </div>
+  `;
+  $('#bulkMoveBtn').addEventListener('click', ()=>{
+    const targetList = $('#bulkMoveSelect').value;
+    state.tasks.forEach(tsk => {
+      if(bulkSelected.has(tsk.id)){
+        tsk.list = targetList;
+        tsk.type = (targetList==='work'||targetList==='home') ? targetList : null;
+      }
+    });
+    bulkSelected.clear(); persistTasks(); renderTasks();
+  });
+  $('#bulkDeleteBtn').addEventListener('click', ()=>{
+    if(!confirm(`Удалить ${bulkSelected.size} задач(и)?`)) return;
+    state.tasks = state.tasks.filter(t=>!bulkSelected.has(t.id));
+    bulkSelected.clear(); persistTasks(); renderTasks();
+  });
+}
+function getDropIndex(col, clientY){
+  const container = col.querySelector('.kanban-active-cards');
+  if(!container) return 0;
+  const cards = Array.from(container.querySelectorAll(':scope > .kcard'));
+  for(let i=0;i<cards.length;i++){
+    const r = cards[i].getBoundingClientRect();
+    if(clientY < r.top + r.height/2) return i;
+  }
+  return cards.length;
+}
+function showDropMarker(col, index){
+  document.querySelectorAll('.kanban-drop-marker').forEach(m=>m.remove());
+  const container = col.querySelector('.kanban-active-cards');
+  if(!container) return;
+  const marker = document.createElement('div');
+  marker.className = 'kanban-drop-marker';
+  const cards = Array.from(container.querySelectorAll(':scope > .kcard'));
+  if(index>=cards.length) container.appendChild(marker);
+  else container.insertBefore(marker, cards[index]);
+}
+function commitDrop(tsk, targetListId, dropIndex){
+  const siblings = sortByOrder(state.tasks.filter(x=>x.list===targetListId && !x.done && x.id!==tsk.id));
+  siblings.splice(Math.max(0, Math.min(dropIndex, siblings.length)), 0, tsk);
+  siblings.forEach((item,i) => { item.order = i; });
+  tsk.list = targetListId;
+  tsk.type = (targetListId==='work'||targetListId==='home') ? targetListId : null;
+  persistTasks();
+}
+function attachDragHandlers(board){
+  $$('[data-grip]', board).forEach(handle => {
+    handle.addEventListener('pointerdown', e => {
+      if(e.pointerType==='mouse' && e.button!==0) return;
+      e.preventDefault();
+      const taskId = handle.dataset.grip;
+      const tsk = state.tasks.find(x=>x.id===taskId);
+      const cardEl = handle.closest('.kcard');
+      const rect = cardEl.getBoundingClientRect();
+      const ghost = cardEl.cloneNode(true);
+      Object.assign(ghost.style, {
+        position:'fixed', top:rect.top+'px', left:rect.left+'px', width:rect.width+'px',
+        pointerEvents:'none', opacity:'0.9', zIndex:999, boxShadow:'0 10px 28px rgba(0,0,0,.3)', transform:'rotate(1.5deg)'
+      });
+      document.body.appendChild(ghost);
+      cardEl.style.opacity = '0.3';
+      const offsetX = e.clientX-rect.left, offsetY = e.clientY-rect.top;
+      try{ handle.setPointerCapture(e.pointerId); }catch(err){}
+      let lastCol = null, lastIndex = null;
+      const onMove = ev => {
+        ghost.style.left = (ev.clientX-offsetX)+'px';
+        ghost.style.top = (ev.clientY-offsetY)+'px';
+        $$('.kanban-col', board).forEach(c=>c.classList.remove('drop-target'));
+        const col = document.elementFromPoint(ev.clientX, ev.clientY)?.closest('.kanban-col');
+        if(col){
+          col.classList.add('drop-target');
+          const idx = getDropIndex(col, ev.clientY);
+          showDropMarker(col, idx);
+          lastCol = col; lastIndex = idx;
+        } else {
+          document.querySelectorAll('.kanban-drop-marker').forEach(m=>m.remove());
+          lastCol = null;
+        }
+      };
+      const onUp = ev => {
+        document.removeEventListener('pointermove', onMove);
+        document.removeEventListener('pointerup', onUp);
+        ghost.remove();
+        cardEl.style.opacity = '';
+        $$('.kanban-col', board).forEach(c=>c.classList.remove('drop-target'));
+        document.querySelectorAll('.kanban-drop-marker').forEach(m=>m.remove());
+        if(lastCol){
+          const targetListId = lastCol.dataset.listid;
+          commitDrop(tsk, targetListId, lastIndex);
+        }
+        renderTasks();
+      };
+      document.addEventListener('pointermove', onMove);
+      document.addEventListener('pointerup', onUp);
+    });
+  });
 }
 function cardHTML(t){
   const subDone = t.subtasks.filter(s=>s.done).length;
   const accent = getListColor(t.list);
   const expanded = expandedCards.has(t.id);
+  const selected = bulkMode && bulkSelected.has(t.id);
   return `
-  <div class="kcard">
-    <div style="display:flex; gap:8px; align-items:flex-start;">
-      <button class="checkbox ${t.done?'done':''}" style="${t.done?`background:${accent};border-color:${accent}`:''}" data-toggle="${t.id}">${icon('check')}</button>
-      <div style="flex:1" data-expand="${t.id}">
+  <div class="kcard" style="${selected?'border-color:var(--goal); box-shadow:0 0 0 2px var(--goal-dim);':''}">
+    <div style="display:flex; gap:6px; align-items:flex-start;">
+      ${bulkMode
+        ? `<span class="checkbox ${selected?'done':''}" data-expand="${t.id}" style="${selected?'background:var(--goal);border-color:var(--goal);color:#fff;':''}">${icon('check')}</span>`
+        : `<button class="checkbox ${t.done?'done':''}" style="${t.done?`background:${accent};border-color:${accent}`:''}" data-toggle="${t.id}">${icon('check')}</button>`
+      }
+      <div style="flex:1; min-width:0;" data-expand="${t.id}">
         <div class="kctext ${t.done?'done':''}">${escapeHtml(t.text)}</div>
         <div class="kcmeta">
           ${t.date ? `<span class="chip">${fmtHuman(t.date)}</span>` : ''}
@@ -1135,7 +1359,10 @@ function cardHTML(t){
           ${t.subtasks.length ? `<span class="chip sub">${subDone}/${t.subtasks.length}</span>` : ''}
         </div>
       </div>
-      <button class="delbtn" data-edit="${t.id}">${icon('edit')}</button>
+      ${!bulkMode ? `
+        <button class="delbtn kcard-grip" data-grip="${t.id}" style="touch-action:none; cursor:grab;">${icon('list')}</button>
+        <button class="delbtn" data-edit="${t.id}">${icon('edit')}</button>
+      ` : ''}
     </div>
     ${expanded && t.subtasks.length ? `
       <div style="margin-top:8px; padding-top:8px; border-top:1px dashed var(--border);">
@@ -1156,12 +1383,50 @@ function quickAddToList(listId){
   const inp = $('#qa-'+listId);
   if(!inp.value.trim()) return;
   const type = (listId==='work'||listId==='home') ? listId : null;
-  state.tasks.push({ id: uid(), type, list: listId, text: inp.value.trim(), date:null, tags:[], subtasks:[], done:false, createdAt: Date.now(), recur:null });
+  state.tasks.push({ id: uid(), type, list: listId, text: inp.value.trim(), date:null, tags:[], subtasks:[], done:false, createdAt: Date.now(), recur:null, carryCount:0, order:newTaskOrder() });
   inp.value=''; persistTasks(); renderTasks();
 }
 
 /* ============================= CALENDAR TAB ============================= */
+let calViewMode = 'month';
+let cal2wCursor = weekStartISO(todayISO());
 function renderCalendar(){
+  const html = `
+    <div class="inbox-tabs" style="margin-top:6px;">
+      <button class="pill ${calViewMode==='month'?'active work':''}" data-calview="month">Месяц</button>
+      <button class="pill ${calViewMode==='2weeks'?'active work':''}" data-calview="2weeks">2 недели</button>
+    </div>
+    <div id="calBody"></div>
+  `;
+  $('#tab-calendar').innerHTML = html;
+  $$('[data-calview]').forEach(b => b.addEventListener('click', ()=>{ calViewMode = b.dataset.calview; renderCalendar(); }));
+  if(calViewMode==='month') renderCalendarMonth(); else renderCalendarTwoWeeks();
+}
+function dotCategoriesForDay(iso){
+  const dayTasks = state.tasks.filter(t=>t.date===iso);
+  const catWork = dayTasks.filter(t=>t.type==='work');
+  const catHome = dayTasks.filter(t=>t.type==='home');
+  const catOther = dayTasks.filter(t=>t.type===null);
+  return [
+    catWork.length ? { cat:'work', color:getListColor('work'), allDone:catWork.every(t=>t.done) } : null,
+    catHome.length ? { cat:'home', color:getListColor('home'), allDone:catHome.every(t=>t.done) } : null,
+    catOther.length ? { cat:'other', color:state.otherColor, allDone:catOther.every(t=>t.done) } : null,
+  ].filter(Boolean);
+}
+function dotsHTML(iso){
+  return dotCategoriesForDay(iso).map(d => `
+    <button class="dot-btn" data-jumpday="${iso}" data-jumpcat="${d.cat}" title="Открыть категорию">
+      <i style="${d.allDone?`background:${d.color};`:`background:transparent; border:1.5px solid ${d.color};`}"></i>
+    </button>
+  `).join('');
+}
+function bindDots(root){
+  $$('[data-jumpday]', root).forEach(b => b.addEventListener('click', e => {
+    e.stopPropagation();
+    openDayDetail(b.dataset.jumpday, b.dataset.jumpcat);
+  }));
+}
+function renderCalendarMonth(){
   const [y,m] = calMonth.split('-').map(Number);
   const first = new Date(y, m-1, 1);
   const startOffset = (first.getDay()+6)%7;
@@ -1184,34 +1449,82 @@ function renderCalendar(){
       ${DOW.map(d=>`<div class="cal-dow">${d}</div>`).join('')}
       ${cells.map(c => {
         if(c.faded) return `<div class="cal-cell faded">${c.day}</div>`;
-        const dayTasks = state.tasks.filter(t=>t.date===c.iso);
-        const listsToday = [...new Set(dayTasks.map(t=>t.list))];
         const jr = state.journal.find(j=>j.date===c.iso);
         const isToday = c.iso === todayISO();
         const coverStyle = jr && jr.photo
           ? `style="background-image:linear-gradient(180deg, rgba(0,0,0,.05), rgba(0,0,0,.6)), url('${jr.photo}'); background-size:cover; background-position:center; color:#fff;"`
           : '';
-        const dots = listsToday.map(lid => {
-          const color = getListColor(lid);
-          const all = dayTasks.filter(t=>t.list===lid);
-          const allDone = all.every(t=>t.done);
-          return allDone
-            ? `<i style="background:${color};"></i>`
-            : `<i style="background:transparent; border:1.5px solid ${color};"></i>`;
-        }).join('');
-        return `<button class="cal-cell ${isToday?'today':''}" data-day="${c.iso}" ${coverStyle}>
+        return `<div class="cal-cell ${isToday?'today':''}" data-day="${c.iso}" ${coverStyle}>
           <span class="cal-daynum">${c.day}</span>
           ${jr ? `<span class="cal-rating" style="${jr.photo?'color:#fff; text-shadow:0 1px 3px rgba(0,0,0,.6);':''}">★${jr.rating}</span>` : ''}
-          <div class="cal-dots">${dots}</div>
-        </button>`;
+          <div class="cal-dots">${dotsHTML(c.iso)}</div>
+        </div>`;
       }).join('')}
     </div>
   `;
-  $('#tab-calendar').innerHTML = html;
-  $('#calPrev').addEventListener('click', ()=>{ calMonth = shiftMonth(calMonth,-1); renderCalendar(); });
-  $('#calNext').addEventListener('click', ()=>{ calMonth = shiftMonth(calMonth,1); renderCalendar(); });
+  $('#calBody').innerHTML = html;
+  $('#calPrev').addEventListener('click', ()=>{ calMonth = shiftMonth(calMonth,-1); renderCalendarMonth(); });
+  $('#calNext').addEventListener('click', ()=>{ calMonth = shiftMonth(calMonth,1); renderCalendarMonth(); });
   $('#calStatsBtn').addEventListener('click', ()=> openCalendarStats(calMonth));
-  $$('[data-day]').forEach(b => b.addEventListener('click', ()=> openDayDetail(b.dataset.day)));
+  const body = $('#calBody');
+  $$('[data-day]', body).forEach(b => b.addEventListener('click', ()=> openDayDetail(b.dataset.day)));
+  bindDots(body);
+}
+function renderCalendarTwoWeeks(){
+  const days = Array.from({length:14}, (_,i) => { const d=parseISO(cal2wCursor); d.setDate(d.getDate()+i); return isoDate(d); });
+  const t = todayISO();
+  const endLabel = fmtHuman(days[13]);
+  const MAX_VISIBLE = 4;
+  const html = `
+    <div class="cal-header">
+      <button class="cal-nav" id="cal2wPrev">${icon('chevLeft')}</button>
+      <h2>${fmtHuman(cal2wCursor)} — ${endLabel}</h2>
+      <button class="cal-nav" id="cal2wNext">${icon('chevRight')}</button>
+    </div>
+    <div class="cal2w-wrap">
+      <div class="cal2w-grid">
+        ${DOW.map(d=>`<div class="cal2w-dow">${d}</div>`).join('')}
+        ${days.map(iso => {
+          const dayTasks = sortByOrder(state.tasks.filter(x=>x.date===iso));
+          const jr = state.journal.find(j=>j.date===iso);
+          const isToday = iso===t;
+          const d = parseISO(iso);
+          const visible = dayTasks.slice(0, MAX_VISIBLE);
+          const hiddenCount = dayTasks.length - visible.length;
+          return `
+          <div class="cal2w-cell" data-day2w="${iso}">
+            <div class="cal2w-top">
+              <span class="cal2w-daynum ${isToday?'today':''}">${d.getDate()}</span>
+              ${jr ? `<span style="font-size:9.5px; color:var(--journal); font-weight:700;">★${jr.rating}</span>` : ''}
+            </div>
+            ${visible.map(x => `
+              <div class="cal2w-item ${x.done?'done':''}" style="background:${getListColor(x.list)}1a; color:${getListColor(x.list)}; border-left:2px solid ${getListColor(x.list)};" data-cal2witem="${x.id}">${escapeHtml(x.text)}</div>
+            `).join('')}
+            ${hiddenCount>0 ? `<div class="cal2w-more" data-day2wmore="${iso}">+${hiddenCount} ещё</div>` : ''}
+            ${!dayTasks.length ? `<button class="cal2w-add" data-day2wadd="${iso}">${icon('plus')}</button>` : ''}
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+  `;
+  $('#calBody').innerHTML = html;
+  $('#cal2wPrev').addEventListener('click', ()=>{ const d=parseISO(cal2wCursor); d.setDate(d.getDate()-14); cal2wCursor=isoDate(d); renderCalendarTwoWeeks(); });
+  $('#cal2wNext').addEventListener('click', ()=>{ const d=parseISO(cal2wCursor); d.setDate(d.getDate()+14); cal2wCursor=isoDate(d); renderCalendarTwoWeeks(); });
+  const body = $('#calBody');
+  $$('[data-cal2witem]', body).forEach(el => el.addEventListener('click', e => {
+    e.stopPropagation();
+    const tsk = state.tasks.find(x=>x.id===el.dataset.cal2witem);
+    openTaskModal({ task: tsk });
+  }));
+  $$('[data-day2wmore]', body).forEach(el => el.addEventListener('click', e => {
+    e.stopPropagation();
+    openDayDetail(el.dataset.day2wmore);
+  }));
+  $$('[data-day2wadd]', body).forEach(el => el.addEventListener('click', e => {
+    e.stopPropagation();
+    openTaskModal({ date: el.dataset.day2wadd });
+  }));
+  $$('[data-day2w]', body).forEach(el => el.addEventListener('click', ()=> openDayDetail(el.dataset.day2w)));
 }
 function buildActivityRings(rings, size=180, strokeW=14){
   const cx = size/2, cy = size/2;
@@ -1314,36 +1627,79 @@ function shiftMonth(key, delta){
   m += delta; if(m<1){m=12;y--;} if(m>12){m=1;y++;}
   return `${y}-${pad2(m)}`;
 }
-function openDayDetail(iso){
+function openDayDetail(iso, focusCategory=null){
   const work = state.tasks.filter(t=>t.type==='work' && t.date===iso);
   const home = state.tasks.filter(t=>t.type==='home' && t.date===iso);
+  const other = state.tasks.filter(t=>t.type===null && t.date===iso);
   const jr = state.journal.find(j=>j.date===iso);
   const html = `
     <div class="modal-title">${fmtHuman(iso)}</div>
-    <div class="section-title"><h2 style="color:var(--work)">Работа</h2></div>
+    <div class="section-title" id="dd-sec-work"><h2 style="color:${getListColor('work')}">Работа</h2></div>
     <div class="slotlist" id="dd-work"></div>
     <div class="row-gap" style="margin:10px 0"><button class="btn small" id="dd-add-work">+ рабочая задача</button></div>
-    <div class="section-title"><h2 style="color:var(--home)">Дом</h2></div>
+    <div class="section-title" id="dd-sec-home"><h2 style="color:${getListColor('home')}">Дом</h2></div>
     <div class="slotlist" id="dd-home"></div>
     <div class="row-gap" style="margin:10px 0 4px"><button class="btn small" id="dd-add-home">+ домашнее дело</button></div>
-    ${ jr ? `
-      <div class="section-title"><h2 style="color:var(--journal)">Дневник</h2></div>
-      <div class="card">
-        ${jr.photo ? `<img src="${jr.photo}" style="width:100%; border-radius:12px; margin-bottom:10px; display:block;">` : ''}
-        <div class="journal-hist-row" style="border:none; padding:0;">
-          <div class="jhstars">${'★'.repeat(jr.rating)}${'☆'.repeat(5-jr.rating)}</div>
-          <p>${escapeHtml(jr.text)||'<span style=\"color:var(--text-faint)\">без заметки</span>'}</p>
-        </div>
-      </div>
-    ` : ''}
+    <div class="section-title" id="dd-sec-other"><h2 style="color:${state.otherColor}">Другое</h2></div>
+    <div class="slotlist" id="dd-other"></div>
+    <div class="row-gap" style="margin:10px 0 4px"><button class="btn small" id="dd-add-other">+ задача</button></div>
+    <div class="section-title"><h2 style="color:var(--journal)">Дневник</h2></div>
+    <div class="card journal-embed">
+      <div class="stars" id="dd-stars"></div>
+      <div class="photo-row" id="dd-photoRow"></div>
+      <textarea class="journal-ta" id="dd-journalTa" placeholder="Как прошёл день?">${jr?escapeHtml(jr.text):''}</textarea>
+      <button class="btn btn-primary" id="dd-journalSave" style="background:var(--journal); color:#fff; margin-top:10px; width:100%;">Сохранить</button>
+    </div>
   `;
   openModal(html, root => {
-    const wEl = $('#dd-work', root), hEl = $('#dd-home', root);
+    const wEl = $('#dd-work', root), hEl = $('#dd-home', root), oEl = $('#dd-other', root);
     wEl.innerHTML = work.length ? work.map(taskRowHTML).join('') : `<div class="empty">Пока пусто</div>`;
     hEl.innerHTML = home.length ? home.map(taskRowHTML).join('') : `<div class="empty">Пока пусто</div>`;
-    bindDayModalRow(wEl, iso); bindDayModalRow(hEl, iso);
+    oEl.innerHTML = other.length ? other.map(taskRowHTML).join('') : `<div class="empty">Пока пусто</div>`;
+    bindDayModalRow(wEl, iso); bindDayModalRow(hEl, iso); bindDayModalRow(oEl, iso);
     $('#dd-add-work', root).addEventListener('click', ()=>{ closeModal(); openTaskModal({type:'work', date:iso}); });
     $('#dd-add-home', root).addEventListener('click', ()=>{ closeModal(); openTaskModal({type:'home', date:iso}); });
+    $('#dd-add-other', root).addEventListener('click', ()=>{ closeModal(); openTaskModal({ date:iso }); });
+
+    if(focusCategory){
+      const target = $('#dd-sec-'+focusCategory, root);
+      if(target) setTimeout(()=> target.scrollIntoView({ behavior:'smooth', block:'start' }), 80);
+    }
+
+    let ddRating = jr ? jr.rating : 0;
+    let ddPhoto = jr ? jr.photo||null : null;
+    const starsEl = $('#dd-stars', root);
+    function drawDdStars(){
+      starsEl.innerHTML = [1,2,3,4,5].map(n => `<button class="star ${n<=ddRating?'on':''}" data-ddstar="${n}">${icon('star')}</button>`).join('');
+      $$('[data-ddstar]', starsEl).forEach(b => b.addEventListener('click', ()=>{ ddRating = Number(b.dataset.ddstar); drawDdStars(); }));
+    }
+    drawDdStars();
+    function drawDdPhotoRow(){
+      const row = $('#dd-photoRow', root);
+      row.innerHTML = ddPhoto
+        ? `<img class="photo-thumb" src="${ddPhoto}"><button class="photo-remove" id="dd-photoRemove">Убрать фото</button>`
+        : `<label class="photo-btn">${icon('camera')}<input type="file" accept="image/*" id="dd-photoInput" style="display:none"></label><span class="hint">Фото дня</span>`;
+      const inp = $('#dd-photoInput', root);
+      if(inp) inp.addEventListener('change', async e => {
+        const file = e.target.files[0]; if(!file) return;
+        ddPhoto = await compressImage(file); drawDdPhotoRow();
+      });
+      const rm = $('#dd-photoRemove', root);
+      if(rm) rm.addEventListener('click', ()=>{ ddPhoto=null; drawDdPhotoRow(); });
+    }
+    drawDdPhotoRow();
+
+    $('#dd-journalSave', root).addEventListener('click', ()=>{
+      const text = $('#dd-journalTa', root).value.trim();
+      if(!ddRating && !text && !ddPhoto) return;
+      const entry = state.journal.find(j=>j.date===iso);
+      if(entry){ entry.rating = ddRating||entry.rating; entry.text = text; entry.photo = ddPhoto; }
+      else state.journal.push({ id: uid(), date:iso, rating: ddRating||3, text, photo: ddPhoto });
+      persistJournal();
+      const btn = $('#dd-journalSave', root); const orig = btn.textContent;
+      btn.textContent = 'Сохранено ✓'; btn.style.opacity='0.8';
+      setTimeout(()=>{ if($('#dd-journalSave')){ $('#dd-journalSave').textContent=orig; $('#dd-journalSave').style.opacity='1'; } }, 1400);
+    });
   });
 }
 function bindDayModalRow(root, iso){
@@ -1626,9 +1982,13 @@ function renderSport(){
   const t = todayISO();
   const html = `
     <button class="btn" id="sportStatsBtn" style="width:100%; margin-top:6px; margin-bottom:14px; display:flex; align-items:center; justify-content:center; gap:8px;">${icon('calendar')} Статистика</button>
-    <div class="section-title" style="margin-top:0"><h2>Упражнения</h2><span class="count">${state.exercises.length}/5</span></div>
+    <div class="section-title" style="margin-top:0"><h2>Упражнения</h2><span class="count">${state.exercises.length}</span></div>
     <div id="exerList" class="sport-exer-grid"></div>
-    ${state.exercises.length<5 ? `<div class="quickadd"><input type="text" id="exerInput" placeholder="Новое упражнение"><button id="exerAdd">${icon('plus')}</button></div>` : ''}
+    <div class="quickadd" style="margin-bottom:6px;"><input type="text" id="exerInput" placeholder="Новое упражнение"><button id="exerAdd">${icon('plus')}</button></div>
+    <div class="inbox-tabs" style="margin:0 0 10px;">
+      <button class="pill active work" data-exerunit="reps">Повторения</button>
+      <button class="pill" data-exerunit="time">Время (сек)</button>
+    </div>
 
     <div class="section-title"><h2>Тренировки</h2></div>
     <div class="card">
@@ -1643,6 +2003,7 @@ function renderSport(){
     <div id="woList"></div>
 
     <div class="section-title"><h2>Замеры</h2></div>
+    <div id="weightChartWrap"></div>
     <div class="card">
       <div class="row-gap">
         <input type="date" id="meDate" value="${t}" style="background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:8px; color:var(--text); flex:1">
@@ -1664,23 +2025,25 @@ function renderSport(){
   if(!state.exercises.length){ exerEl.innerHTML = `<div class="empty">Добавь до 5 упражнений на день</div>`; }
   else {
     exerEl.innerHTML = state.exercises.map(ex => {
+      const isTime = ex.unit==='time';
       const todaySets = (state.sportLogs[t]||{})[ex.id] || [];
       const total = todaySets.reduce((a,b)=>a+b,0);
+      const quicks = isTime ? [15,30,60] : [5,10,20];
       return `
       <div class="exercard">
         <div class="exer-top">
-          <div class="exer-name" data-exrename="${ex.id}" style="cursor:pointer">${escapeHtml(ex.name)}</div>
+          <div class="exer-name" data-exrename="${ex.id}" style="cursor:pointer">${escapeHtml(ex.name)}${isTime?' <span class="chip">время</span>':''}</div>
           <button class="delbtn" data-exdel="${ex.id}">${icon('x')}</button>
         </div>
-        <div class="exer-total">${total}<span> повторений сегодня</span></div>
+        <div class="exer-total">${isTime?fmtDuration(total):total}<span> ${isTime?'сегодня':'повторений сегодня'}</span></div>
         <div class="quickreps">
-          ${[5,10,20].map(n=>`<button class="qr-btn" data-exadd="${ex.id}" data-n="${n}">+${n}</button>`).join('')}
+          ${quicks.map(n=>`<button class="qr-btn" data-exadd="${ex.id}" data-n="${n}">+${isTime?fmtDuration(n):n}</button>`).join('')}
         </div>
         <div class="customrep">
-          <input type="number" id="custom-${ex.id}" placeholder="своё число">
+          <input type="number" id="custom-${ex.id}" placeholder="${isTime?'секунд':'своё число'}">
           <button class="btn small" data-excustom="${ex.id}">Добавить</button>
         </div>
-        ${todaySets.length ? `<div class="setschips">${todaySets.map((n,i)=>`<span class="setschip">${n}<button data-exrm="${ex.id}" data-idx="${i}">${icon('x')}</button></span>`).join('')}</div>` : ''}
+        ${todaySets.length ? `<div class="setschips">${todaySets.map((n,i)=>`<span class="setschip">${isTime?fmtDuration(n):n}<button data-exrm="${ex.id}" data-idx="${i}">${icon('x')}</button></span>`).join('')}</div>` : ''}
       </div>`;
     }).join('');
     $$('[data-exadd]', exerEl).forEach(b => b.addEventListener('click', ()=> addRep(b.dataset.exadd, Number(b.dataset.n))));
@@ -1696,19 +2059,18 @@ function renderSport(){
       state.exercises = state.exercises.filter(e=>e.id!==b.dataset.exdel);
       persistSport(); renderSport();
     }));
-    $$('[data-exrename]', exerEl).forEach(el => el.addEventListener('click', ()=>{
-      const ex = state.exercises.find(x=>x.id===el.dataset.exrename);
-      const newName = renamePrompt(ex.name);
-      if(newName){ ex.name = newName; persistSport(); renderSport(); }
-    }));
+    $$('[data-exrename]', exerEl).forEach(el => el.addEventListener('click', ()=> openExerciseEditModal(el.dataset.exrename)));
   }
-  if(state.exercises.length<5){
-    $('#exerAdd').addEventListener('click', ()=>{
-      const inp = $('#exerInput'); if(!inp.value.trim()) return;
-      state.exercises.push({ id: uid(), name: inp.value.trim() });
-      inp.value=''; persistSport(); renderSport();
-    });
-  }
+  $('#exerAdd').addEventListener('click', ()=>{
+    const inp = $('#exerInput'); if(!inp.value.trim()) return;
+    state.exercises.push({ id: uid(), name: inp.value.trim(), unit: newExerciseUnit });
+    inp.value=''; persistSport(); renderSport();
+  });
+  $$('[data-exerunit]').forEach(b => b.addEventListener('click', ()=>{
+    newExerciseUnit = b.dataset.exerunit;
+    $$('[data-exerunit]').forEach(x => x.classList.toggle('active', x===b));
+    $$('[data-exerunit]').forEach(x => x.classList.toggle('work', x===b));
+  }));
 
   const woEl = $('#woList');
   const sortedWo = [...state.workouts].sort((a,b)=> b.date.localeCompare(a.date));
@@ -1731,6 +2093,20 @@ function renderSport(){
 
   const meEl = $('#meList');
   const sortedMe = [...state.measurements].sort((a,b)=> b.date.localeCompare(a.date));
+  const chartWrap = $('#weightChartWrap');
+  const METRICS = { weight:{label:'Вес', unit:' кг', color:'var(--sport)'}, waist:{label:'Талия', unit:' см', color:'var(--goal)'}, hips:{label:'Бёдра', unit:' см', color:'var(--journal)'}, chest:{label:'Грудь', unit:' см', color:'var(--habit)'} };
+  const availableMetrics = Object.keys(METRICS).filter(k => state.measurements.filter(m=>m[k]).length>=2);
+  if(!availableMetrics.includes(measurementChartMetric)) measurementChartMetric = availableMetrics[0] || 'weight';
+  const points = [...state.measurements].filter(m=>m[measurementChartMetric]).sort((a,b)=> a.date.localeCompare(b.date));
+  chartWrap.innerHTML = availableMetrics.length ? `
+    <div class="card">
+      <div class="row-gap" style="margin-bottom:8px;">
+        ${availableMetrics.map(k => `<button class="pill ${measurementChartMetric===k?'active work':''}" data-metric="${k}">${METRICS[k].label}</button>`).join('')}
+      </div>
+      ${buildMeasurementChart(points, measurementChartMetric, METRICS[measurementChartMetric].unit, METRICS[measurementChartMetric].color)}
+    </div>
+  ` : '';
+  $$('[data-metric]', chartWrap).forEach(b => b.addEventListener('click', ()=>{ measurementChartMetric = b.dataset.metric; renderSport(); }));
   meEl.innerHTML = sortedMe.length ? sortedMe.map(m => `
     <div class="minirow">
       <div>
@@ -1799,7 +2175,9 @@ function openSportStats(){
       const exRows = state.exercises.map(ex => {
         const sets = logs[ex.id] || [];
         if(!sets.length) return null;
-        return `<div class="minirow"><div class="l">${escapeHtml(ex.name)}</div><div class="r">${sets.join(' · ')} = ${sets.reduce((a,b)=>a+b,0)}</div></div>`;
+        const isTime = ex.unit==='time';
+        const fmt = n => isTime ? fmtDuration(n) : n;
+        return `<div class="minirow"><div class="l">${escapeHtml(ex.name)}</div><div class="r">${sets.map(fmt).join(' · ')} = ${fmt(sets.reduce((a,b)=>a+b,0))}</div></div>`;
       }).filter(Boolean).join('');
       const woRows = state.workouts.filter(w=>w.date===iso).map(w =>
         `<div class="minirow"><div class="l">${escapeHtml(w.name)}</div><div class="r">${w.duration?w.duration+' мин':''}${w.note?' · '+escapeHtml(w.note):''}</div></div>`
@@ -1814,6 +2192,78 @@ function openSportStats(){
   });
 }
 
+function buildMeasurementChart(points, metricKey, unit, color){
+  const w = 320, h = 100, padL = 34, padB = 16, padT = 10;
+  const values = points.map(p=>p[metricKey]);
+  const min = Math.min(...values), max = Math.max(...values);
+  const range = (max-min) || 1;
+  const innerW = w-padL-8, innerH = h-padT-padB;
+  const stepX = points.length>1 ? innerW/(points.length-1) : 0;
+  const coords = points.map((p,i) => ({
+    x: padL + i*stepX,
+    y: padT + innerH - ((p[metricKey]-min)/range)*innerH
+  }));
+  const pathD = coords.map((c,i)=> (i===0?'M':'L')+c.x.toFixed(1)+','+c.y.toFixed(1)).join(' ');
+  const areaD = pathD + ` L${coords[coords.length-1].x.toFixed(1)},${padT+innerH} L${coords[0].x.toFixed(1)},${padT+innerH} Z`;
+  const dots = coords.map((c,i)=>`<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="3" fill="${color}"></circle>`).join('');
+  const first = points[0], last = points[points.length-1];
+  const diff = (last[metricKey]-first[metricKey]).toFixed(1);
+  return `
+    <div style="display:flex; justify-content:flex-end; align-items:baseline; margin-bottom:6px;">
+      <span style="font-size:12px; font-weight:800; color:${diff<0?'var(--habit)':diff>0?'var(--danger)':'var(--text-faint)'};">${last[metricKey]}${unit} (${diff>0?'+':''}${diff})</span>
+    </div>
+    <svg viewBox="0 0 ${w} ${h}" style="width:100%; height:${h}px; display:block;">
+      <text x="2" y="${padT+5}" font-size="8" fill="var(--text-faint)">${max}</text>
+      <text x="2" y="${padT+innerH}" font-size="8" fill="var(--text-faint)">${min}</text>
+      <line x1="${padL}" y1="${padT+innerH}" x2="${w-4}" y2="${padT+innerH}" stroke="var(--border)" stroke-width="1"/>
+      <path d="${areaD}" fill="${color}" opacity="0.12"></path>
+      <path d="${pathD}" fill="none" stroke="${color}" stroke-width="2"></path>
+      ${dots}
+    </svg>
+    <div style="display:flex; justify-content:space-between; font-size:9px; color:var(--text-faint); margin-top:2px;">
+      <span>${fmtHuman(first.date)}</span>
+      <span>${fmtHuman(last.date)}</span>
+    </div>
+  `;
+}
+function openExerciseEditModal(exId){
+  const ex = state.exercises.find(x=>x.id===exId);
+  const isTime = ex.unit==='time';
+  const html = `
+    <div class="modal-title">Упражнение</div>
+    <div class="field"><label>Название</label><input type="text" id="ee-name" value="${escapeHtml(ex.name)}"></div>
+    <div class="field">
+      <label>Что считаем</label>
+      <div class="inbox-tabs" style="margin:0;">
+        <button class="pill ${!isTime?'active work':''}" data-eeunit="reps">Повторения</button>
+        <button class="pill ${isTime?'active work':''}" data-eeunit="time">Время (сек)</button>
+      </div>
+      <p class="hint">Если сменишь тип — уже записанные сегодня и в прошлом числа останутся как есть, но будут показываться в новом формате (секунды ↔ штуки).</p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" id="ee-delete" style="color:var(--danger)">Удалить</button>
+      <button class="btn btn-primary" id="ee-save" style="background:var(--sport);">Сохранить</button>
+    </div>
+  `;
+  openModal(html, root => {
+    let selectedUnit = ex.unit==='time' ? 'time' : 'reps';
+    $$('[data-eeunit]', root).forEach(b => b.addEventListener('click', ()=>{
+      selectedUnit = b.dataset.eeunit;
+      $$('[data-eeunit]', root).forEach(x => x.classList.toggle('active', x===b));
+      $$('[data-eeunit]', root).forEach(x => x.classList.toggle('work', x===b));
+    }));
+    $('#ee-save', root).addEventListener('click', ()=>{
+      const name = $('#ee-name', root).value.trim();
+      if(name) ex.name = name;
+      ex.unit = selectedUnit;
+      persistSport(); closeModal(); renderSport();
+    });
+    $('#ee-delete', root).addEventListener('click', ()=>{
+      state.exercises = state.exercises.filter(x=>x.id!==exId);
+      persistSport(); closeModal(); renderSport();
+    });
+  });
+}
 function addRep(exId, n){
   const t = todayISO();
   if(!state.sportLogs[t]) state.sportLogs[t] = {};
@@ -1831,23 +2281,176 @@ function openSettingsModal(){
     <button class="btn" id="diagBtn" style="width:100%; margin-bottom:6px;">Проверить соединение с Supabase</button>
     <pre id="diagOut" class="hint" style="white-space:pre-wrap; background:var(--surface2); border-radius:8px; padding:10px; margin-bottom:14px; display:none;"></pre>
     <div class="backup-row">
-      <button class="btn btn-primary" id="exportBtn">${icon('download')} Скачать резервную копию (JSON)</button>
+      <button class="btn btn-primary" id="exportBtn" style="display:flex; align-items:center; justify-content:center; gap:8px;">${icon('download')} Скачать резервную копию (JSON)</button>
       <p class="hint">Сохрани файл в папку на компьютере, которая синхронизируется с Яндекс.Диском — он сам загрузится в облако. Так данные не зависят от хранилища Claude.</p>
-      <label class="btn" style="text-align:center; display:block;">${icon('upload')} Загрузить из файла
+      <button class="btn" id="pdfReportBtn" style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px;">${icon('download')} Скачать PDF-отчёт (все данные)</button>
+      <p class="hint">Откроется окно печати браузера — выбери «Сохранить как PDF». Внутри: задачи, привычки, цели, дневник — читаемо, для себя или чтобы распечатать.</p>
+      <label class="btn" style="display:flex; align-items:center; justify-content:center; gap:8px;">${icon('upload')} Загрузить из файла
         <input type="file" accept=".json" id="importInput" style="display:none">
       </label>
       <p class="hint">Загрузка полностью заменит текущие данные в приложении сохранённой копией.</p>
     </div>
+
+    <div class="section-title" style="margin-top:20px;"><h2>Обслуживание</h2></div>
+    <div class="card">
+      <p class="hint" style="margin-bottom:10px;">Выполненные задачи старше 90 дней (в том числе прошлые повторения регулярных задач) можно архивировать — они скачаются файлом и уберутся из активной базы, чтобы та не разрасталась бесконечно. Ничего не теряется безвозвратно, просто переезжает в файл. Активные и недавние задачи не тронет.</p>
+      <button class="btn" id="cleanupBtn" style="width:100%;">Проверить, сколько можно удалить</button>
+      <div id="cleanupResult" style="margin-top:10px;"></div>
+    </div>
   `;
   openModal(html, root => {
     $('#exportBtn', root).addEventListener('click', exportBackup);
+    $('#pdfReportBtn', root).addEventListener('click', downloadFullReportPDF);
     $('#importInput', root).addEventListener('change', importBackup);
     $('#diagBtn', root).addEventListener('click', async ()=>{
       const out = $('#diagOut', root);
       out.style.display = 'block'; out.textContent = 'Проверяю…';
       out.textContent = await diagnoseSupabase();
     });
+    $('#cleanupBtn', root).addEventListener('click', ()=>{
+      const cutoff = isoDate((()=>{ const d=new Date(); d.setDate(d.getDate()-90); return d; })());
+      const stale = state.tasks.filter(t => t.done && t.date && t.date < cutoff);
+      const resEl = $('#cleanupResult', root);
+      if(!stale.length){ resEl.innerHTML = `<p class="hint" style="margin:0;">Нечего архивировать — старых выполненных задач нет.</p>`; return; }
+      resEl.innerHTML = `
+        <p class="hint" style="margin-bottom:8px;">Найдено: <b style="color:var(--text)">${stale.length}</b> выполненных задач до ${fmtHuman(cutoff)}.</p>
+        <button class="btn btn-primary" id="cleanupConfirmBtn" style="width:100%; background:var(--danger);">Архивировать (скачать файл и убрать из базы)</button>
+      `;
+      $('#cleanupConfirmBtn', root).addEventListener('click', ()=>{
+        downloadTextFile(`archive-tasks-${todayISO()}.json`, JSON.stringify(stale, null, 2));
+        const staleIds = new Set(stale.map(t=>t.id));
+        state.tasks = state.tasks.filter(t=>!staleIds.has(t.id));
+        persistTasks();
+        resEl.innerHTML = `<p class="hint" style="margin:0; color:var(--habit);">Архивировано ${stale.length} задач — файл скачан, из активной базы убраны.</p>`;
+        renderActive();
+      });
+    });
   });
+}
+function buildFullReportHTML(){
+  const esc = s => escapeHtml(s||'');
+  const genDate = fmtHuman(todayISO());
+  const chk = done => `<span class="chk ${done?'on':''}"></span>`;
+
+  const tasksByList = state.lists.map(l => {
+    const items = state.tasks.filter(t=>t.list===l.id).sort((a,b)=> (a.date||'9999').localeCompare(b.date||'9999'));
+    if(!items.length) return '';
+    return `
+      <div class="block" style="border-left-color:${l.color};">
+        <div class="block-head" style="color:${l.color};">${esc(l.name)} <span class="count">${items.length}</span></div>
+        <table>
+          <colgroup><col style="width:26px"><col><col style="width:90px"><col style="width:150px"></colgroup>
+          <tr><th></th><th>Задача</th><th>Дата</th><th>Теги</th></tr>
+          ${items.map(t => `<tr class="${t.done?'done':''}">
+            <td>${chk(t.done)}</td>
+            <td>${esc(t.text)}</td>
+            <td>${t.date?fmtHuman(t.date):'—'}</td>
+            <td>${t.tags.map(esc).join(', ')}</td>
+          </tr>`).join('')}
+        </table>
+      </div>
+    `;
+  }).join('');
+
+  const habitsHTML = state.habits.map(h => {
+    const s = habitDashboardStats(h);
+    return `
+      <div class="habit-card" style="border-left-color:${h.color};">
+        <div class="habit-name">${esc(h.name)}${h.archived?' <span class="tag-arch">завершена</span>':''}</div>
+        <div class="habit-bar"><div class="habit-fill" style="width:${s.pct}%; background:${h.color};"></div></div>
+        <div class="habit-meta">${s.done} из ${s.elapsed} дней · ${s.pct}% · ${fmtHuman(s.start)} — ${h.archived?fmtHuman(s.end):'сегодня'}</div>
+      </div>
+    `;
+  }).join('');
+
+  const monthKeys = [...new Set(state.goalsMonthly.map(g=>g.month))].sort();
+  const monthGoalsHTML = monthKeys.map(mk => {
+    const [gy,gm] = mk.split('-').map(Number);
+    const items = state.goalsMonthly.filter(g=>g.month===mk);
+    return `<div class="block" style="border-left-color:var(--rgoal);">
+      <div class="block-head" style="color:var(--rgoal);">${MONTHS_NOM[gm-1]} ${gy}</div>
+      <ul>${items.map(g=>`<li>${chk(g.done)} <span class="${g.done?'strike':''}">${esc(g.text)}</span></li>`).join('')}</ul>
+    </div>`;
+  }).join('');
+  const weekKeys = [...new Set(state.goalsWeekly.map(g=>g.weekStart))].sort();
+  const weekGoalsHTML = weekKeys.map(wk => {
+    const items = state.goalsWeekly.filter(g=>g.weekStart===wk);
+    return `<div class="block" style="border-left-color:var(--rgoal);">
+      <div class="block-head" style="color:var(--rgoal);">${weekLabel(wk)}</div>
+      <ul>${items.map(g=>`<li>${chk(g.done)} <span class="${g.done?'strike':''}">${esc(g.text)}</span></li>`).join('')}</ul>
+    </div>`;
+  }).join('');
+
+  const journalHTML = [...state.journal].sort((a,b)=> a.date.localeCompare(b.date)).map(j => `
+    <div class="entry">
+      <div class="entry-head"><span>${fmtHuman(j.date)}</span><span class="stars">${'★'.repeat(j.rating)}${'☆'.repeat(5-j.rating)}</span></div>
+      ${j.text ? `<p>${esc(j.text)}</p>` : ''}
+    </div>
+  `).join('');
+
+  return `<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><title>Отчёт — Хаб</title>
+  <style>
+    :root{ --rwork:${getListColor('work')}; --rhome:${getListColor('home')}; --rgoal:#9077BB; }
+    *{box-sizing:border-box;}
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; color:#26221f; max-width:760px; margin:0 auto; padding:32px 28px 60px; line-height:1.55; font-size:14px;}
+    .report-header{border-bottom:3px solid #26221f; padding-bottom:14px; margin-bottom:28px;}
+    .report-header h1{font-size:24px; margin:0 0 4px; letter-spacing:-0.02em;}
+    .report-header .sub{color:#8a8580; font-size:12.5px;}
+    h2{font-size:16px; margin:34px 0 14px; padding:6px 0 6px 12px; background:#f4f1ea; border-radius:6px; page-break-after:avoid;}
+    .block{border-left:3px solid #ccc; padding-left:14px; margin-bottom:18px; page-break-inside:avoid;}
+    .block-head{font-size:13.5px; font-weight:700; margin-bottom:6px; display:flex; align-items:baseline; gap:8px;}
+    .block-head .count{color:#999; font-weight:400; font-size:11.5px;}
+    table{width:100%; border-collapse:collapse; font-size:12px; table-layout:fixed;}
+    th,td{border-bottom:1px solid #e6e2d9; padding:5px 6px; text-align:left; vertical-align:top; word-wrap:break-word;}
+    th{color:#8a8580; font-weight:600; font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; border-bottom:1.5px solid #ccc;}
+    tr.done td{color:#a19c94;}
+    tr.done td:nth-child(2){text-decoration:line-through;}
+    .chk{display:inline-block; width:11px; height:11px; border:1.5px solid #b5b0a6; border-radius:3px; vertical-align:middle;}
+    .chk.on{background:#26221f; border-color:#26221f;}
+    ul{font-size:13px; margin:0; padding:0; list-style:none;}
+    ul li{padding:3px 0; display:flex; align-items:baseline; gap:8px;}
+    .strike{text-decoration:line-through; color:#a19c94;}
+    .habit-card{border-left:3px solid #ccc; padding:2px 0 2px 14px; margin-bottom:14px; page-break-inside:avoid;}
+    .habit-name{font-size:13.5px; font-weight:700; margin-bottom:5px;}
+    .tag-arch{font-size:10px; font-weight:400; color:#999; border:1px solid #ddd; border-radius:8px; padding:1px 6px;}
+    .habit-bar{height:6px; background:#f0ede5; border-radius:3px; overflow:hidden; margin-bottom:5px;}
+    .habit-fill{height:100%;}
+    .habit-meta{font-size:11.5px; color:#8a8580;}
+    .entry{margin-bottom:14px; page-break-inside:avoid; border-left:3px solid #e6e2d9; padding-left:14px;}
+    .entry-head{display:flex; justify-content:space-between; font-weight:700; font-size:12.5px;}
+    .entry-head .stars{color:#c17998; font-weight:400;}
+    .entry p{font-size:13px; margin:4px 0 0; color:#3d3934;}
+    @media print{ body{padding:0 6mm;} h2{background:none; border-bottom:1.5px solid #26221f; border-radius:0;} }
+  </style></head><body>
+  <div class="report-header">
+    <h1>Отчёт — Хаб</h1>
+    <div class="sub">Сформирован ${genDate}</div>
+  </div>
+
+  <h2>Задачи</h2>
+  ${tasksByList || '<p>Пока нет задач.</p>'}
+
+  <h2>Привычки</h2>
+  ${habitsHTML || '<p>Пока нет привычек.</p>'}
+
+  <h2>Цели — месяцы</h2>
+  ${monthGoalsHTML || '<p>Пока нет целей на месяц.</p>'}
+
+  <h2>Цели — недели</h2>
+  ${weekGoalsHTML || '<p>Пока нет целей на неделю.</p>'}
+
+  <h2>Дневник</h2>
+  ${journalHTML || '<p>Пока нет записей.</p>'}
+  </body></html>`;
+}
+function downloadFullReportPDF(){
+  const html = buildFullReportHTML();
+  const win = window.open('', '_blank');
+  if(!win){ alert('Браузер заблокировал открытие окна — разреши всплывающие окна для этого сайта и попробуй снова.'); return; }
+  win.document.open();
+  win.document.write(html);
+  win.document.close();
+  setTimeout(()=>{ try{ win.focus(); win.print(); }catch(e){} }, 300);
 }
 function exportBackup(){
   const snapshot = {
@@ -1856,6 +2459,7 @@ function exportBackup(){
     exercises: state.exercises, sportLogs: state.sportLogs, workouts: state.workouts, measurements: state.measurements,
     journal: state.journal,
     goalsMonthly: state.goalsMonthly, goalsWeekly: state.goalsWeekly,
+    retros: state.retros, otherColor: state.otherColor,
     exportedAt: new Date().toISOString()
   };
   const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type:'application/json' });
@@ -1878,7 +2482,9 @@ function importBackup(e){
       state.workouts = data.workouts || []; state.measurements = data.measurements || [];
       state.journal = data.journal || [];
       state.goalsMonthly = data.goalsMonthly || []; state.goalsWeekly = data.goalsWeekly || [];
-      persistTasks(); persistHabits(); persistSport(); persistJournal(); persistGoals();
+      state.retros = data.retros || []; state.otherColor = data.otherColor || state.otherColor;
+      normalizeTasksAndLists(); normalizeHabits();
+      persistTasks(); persistHabits(); persistSport(); persistJournal(); persistGoals(); persistRetro(); persistSettings();
       closeModal(); renderActive();
     }catch(err){ alert('Не удалось прочитать файл — проверь, что это тот самый экспортированный JSON.'); }
   };
@@ -1890,10 +2496,416 @@ function weekLabel(startIso){
   const start = parseISO(startIso); const end = new Date(start); end.setDate(start.getDate()+6);
   return `${start.getDate()} – ${end.getDate()} ${MONTHS[end.getMonth()]}`;
 }
+/* ============================= RETRO TAB ============================= */
+function periodRange(mode, cursor){
+  if(mode==='week'){
+    const d = parseISO(cursor); const end = new Date(d); end.setDate(d.getDate()+6);
+    return { start: cursor, end: isoDate(end) };
+  }
+  const [y,m] = cursor.split('-').map(Number);
+  return { start: `${y}-${pad2(m)}-01`, end: `${y}-${pad2(m)}-${pad2(new Date(y,m,0).getDate())}` };
+}
+function retroPeriodLabel(mode, cursor){
+  if(mode==='week') return weekLabel(cursor);
+  const [y,m] = cursor.split('-').map(Number);
+  return `${MONTHS_NOM[m-1]} ${y}`;
+}
+function tasksStatsForRange(start,end){
+  const tasks = state.tasks.filter(t=>t.date && t.date>=start && t.date<=end);
+  const pick = cat => tasks.filter(t => cat==='other' ? t.type===null : t.type===cat);
+  const work = pick('work'), home = pick('home'), other = pick('other');
+  const pct = arr => arr.length ? Math.round(arr.filter(x=>x.done).length/arr.length*100) : 0;
+  const shape = arr => ({ total:arr.length, done:arr.filter(x=>x.done).length, pct:pct(arr) });
+  return { total: tasks.length, done: tasks.filter(t=>t.done).length, work:shape(work), home:shape(home), other:shape(other) };
+}
+function habitsStatsForRange(start,end){
+  const results = state.habits.map(h => {
+    const hs = h.createdAt ? isoDate(new Date(h.createdAt)) : start;
+    const he = h.archived ? (h.archivedAt||end) : end;
+    const rs = hs > start ? hs : start;
+    const re = he < end ? he : end;
+    if(parseISO(rs) > parseISO(re)) return null;
+    let elapsed=0, done=0;
+    for(let d=parseISO(rs); d<=parseISO(re); d.setDate(d.getDate()+1)){
+      elapsed++; if(state.habitEntries[`${h.id}_${isoDate(d)}`]) done++;
+    }
+    return { habit:h, elapsed, done, pct: elapsed?Math.round(done/elapsed*100):0 };
+  }).filter(Boolean);
+  const avgPct = results.length ? Math.round(results.reduce((a,r)=>a+r.pct,0)/results.length) : 0;
+  return { results, avgPct };
+}
+function sportStatsForRange(start,end){
+  let totalReps = 0;
+  let bestSet = null; // {exerciseName, reps}
+  let bestDay = null; // {date, total}
+  Object.keys(state.sportLogs).forEach(date => {
+    if(date<start || date>end) return;
+    let dayTotal = 0;
+    Object.entries(state.sportLogs[date]).forEach(([exId, sets]) => {
+      const ex = state.exercises.find(e=>e.id===exId);
+      sets.forEach(n => {
+        dayTotal += n;
+        totalReps += n;
+        if(!bestSet || n>bestSet.reps) bestSet = { exerciseName: ex?ex.name:'упражнение', reps:n, date };
+      });
+    });
+    if(dayTotal>0 && (!bestDay || dayTotal>bestDay.total)) bestDay = { date, total:dayTotal };
+  });
+  const workouts = state.workouts.filter(w=>w.date>=start && w.date<=end);
+  const measurements = state.measurements.filter(m=>m.date>=start && m.date<=end);
+  return { totalReps, workoutsCount: workouts.length, measurementsCount: measurements.length, bestSet, bestDay };
+}
+function findRetro(mode, key){ return state.retros.find(r=>r.periodType===mode && r.periodKey===key); }
+function prevPeriodKey(mode, cursor){
+  if(mode==='week'){ const d=parseISO(cursor); d.setDate(d.getDate()-7); return isoDate(d); }
+  return shiftMonth(cursor,-1);
+}
+function nextPeriodKey(mode, cursor){
+  if(mode==='week'){ const d=parseISO(cursor); d.setDate(d.getDate()+7); return isoDate(d); }
+  return shiftMonth(cursor,1);
+}
+function retroTrendData(mode, cursor, n=6){
+  const points = [];
+  let c = cursor;
+  for(let i=0;i<n;i++){
+    const { start, end } = periodRange(mode, c);
+    const ts = tasksStatsForRange(start, end);
+    const hs = habitsStatsForRange(start, end);
+    const ss = sportStatsForRange(start, end);
+    points.unshift({ key:c, taskPct: ts.total?Math.round(ts.done/ts.total*100):0, habitPct: hs.avgPct, sportReps: ss.totalReps, hasTaskData: ts.total>0, hasHabitData: hs.results.length>0, hasSportData: ss.totalReps>0 });
+    c = prevPeriodKey(mode, c);
+  }
+  return points;
+}
+function trendConclusion(points, key, hasKey){
+  const withData = points.filter(p=>p[hasKey]);
+  if(withData.length<2) return null;
+  const last = withData[withData.length-1];
+  const prev = withData[withData.length-2];
+  const diff = last[key]-prev[key];
+  const threshold = Math.max(1, Math.abs(prev[key])*0.03);
+  const dir = diff>threshold ? 'up' : diff<-threshold ? 'down' : 'flat';
+  return { dir, diff, current: last[key] };
+}
+function trendChartHTML(points, key, hasKey, color, label, unit=''){
+  const c = trendConclusion(points, key, hasKey);
+  const dirMeta = { up:{arrow:'↑', word:'растёт', color:'var(--habit)'}, down:{arrow:'↓', word:'снижается', color:'var(--danger)'}, flat:{arrow:'→', word:'стабильно', color:'var(--text-faint)'} };
+  const dm = c ? dirMeta[c.dir] : null;
+  const dataMax = Math.max(1, ...points.filter(p=>p[hasKey]).map(p=>p[key]));
+  const scaleMax = unit==='%' ? 100 : dataMax;
+  const barAreaH = 52;
+  const gap = 20; // место под подпись значения над столбиком
+  const chartH = barAreaH - gap;
+  return `
+    <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px;">
+      <span class="hint" style="margin:0;">${label}</span>
+      ${c ? `<span style="font-size:12px; font-weight:800; color:${dm.color};">${dm.arrow} ${c.current}${unit} · ${dm.word}${c.diff!==0?` (${c.diff>0?'+':''}${c.diff}${unit})`:''}</span>` : ''}
+    </div>
+    <div style="display:flex; gap:6px; margin-bottom:10px;">
+      <div style="position:relative; width:20px; flex:0 0 20px; height:${barAreaH}px;">
+        <span style="position:absolute; top:${gap-5}px; right:2px; font-size:8px; color:var(--text-faint);">${Math.round(scaleMax)}</span>
+        <span style="position:absolute; top:${gap+chartH/2-5}px; right:2px; font-size:8px; color:var(--text-faint);">${Math.round(scaleMax/2)}</span>
+        <span style="position:absolute; bottom:0; right:2px; font-size:8px; color:var(--text-faint);">0</span>
+      </div>
+      <div style="flex:1; position:relative; height:${barAreaH}px;">
+        <div style="position:absolute; left:0; right:0; top:${gap}px; border-top:1px dashed var(--border);"></div>
+        <div style="position:absolute; left:0; right:0; top:${gap+chartH/2}px; border-top:1px dashed var(--border);"></div>
+        <div style="position:absolute; left:0; right:0; bottom:0; border-top:1px solid var(--border);"></div>
+        <div style="display:flex; align-items:flex-end; gap:4px; height:${barAreaH}px; position:relative;">
+          ${points.map(p => {
+            const has = p[hasKey];
+            const h = has ? Math.max(3, Math.round(p[key]/scaleMax*chartH)) : 2;
+            return `<div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:3px; height:100%;">
+              <span style="font-size:9.5px; font-weight:800; color:${has?'var(--text-muted)':'var(--text-faint)'};">${has?p[key]:'–'}</span>
+              <div style="width:100%; height:${h}px; background:${has?color:'var(--border)'}; opacity:${has?1:0.4}; border-radius:2px;"></div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+function journalStatsForRange(start,end){
+  const entries = state.journal.filter(j=>j.date>=start && j.date<=end).sort((a,b)=> a.date.localeCompare(b.date));
+  const avg = entries.length ? entries.reduce((a,e)=>a+e.rating,0)/entries.length : null;
+  const photos = entries.filter(e=>e.photo);
+  return { entries, avg, photos };
+}
+function journalTrendHTML(entries){
+  if(!entries.length) return '';
+  return `
+    <div style="display:flex; align-items:flex-end; gap:3px; height:32px; margin:8px 0 4px;">
+      ${entries.map(e => `<div style="flex:1; height:${e.rating*5+4}px; background:var(--journal); border-radius:2px;" title="${fmtHuman(e.date)}: ${e.rating}★"></div>`).join('')}
+    </div>
+    <div class="hint">Оценки по дням, где есть запись в дневнике</div>
+  `;
+}
+function photoGalleryHTML(photos){
+  if(!photos.length) return '';
+  return `<div style="display:flex; gap:8px; overflow-x:auto; padding:6px 0 2px;">
+    ${photos.map(p => `<img src="${p.photo}" data-photolightbox="${p.photo}" style="width:64px; height:64px; object-fit:cover; border-radius:10px; flex:0 0 auto; cursor:pointer;">`).join('')}
+  </div>`;
+}
+function incompleteTasksForRange(start,end){
+  return state.tasks.filter(t=>t.date && t.date>=start && t.date<=end && !t.done && (t.carryCount||0)>=3);
+}
+function exportRetroText(mode, cursor, taskStats, habitStats, sportStats, journalStats, highlight, text, incomplete){
+  let out = `Ретро — ${retroPeriodLabel(mode,cursor)}\n\n`;
+  if(highlight) out += `Главное событие: ${highlight}\n\n`;
+  out += `Задачи: ${taskStats.done}/${taskStats.total}\n`;
+  out += `  Работа: ${taskStats.work.done}/${taskStats.work.total}\n  Дом: ${taskStats.home.done}/${taskStats.home.total}\n  Другое: ${taskStats.other.done}/${taskStats.other.total}\n\n`;
+  out += `Привычки: средняя выполненность ${habitStats.avgPct}%\n`;
+  habitStats.results.forEach(r => { out += `  ${r.habit.name}: ${r.done}/${r.elapsed} (${r.pct}%)\n`; });
+  out += `\nСпорт: ${sportStats.totalReps} повторений, ${sportStats.workoutsCount} тренировок, ${sportStats.measurementsCount} замеров\n`;
+  if(journalStats.avg!==null) out += `\nДневник: средняя оценка ${journalStats.avg.toFixed(1)}★ (записей: ${journalStats.entries.length})\n`;
+  if(incomplete.length){
+    out += `\nНезакрытые задачи (${incomplete.length}):\n`;
+    incomplete.forEach(t => { out += `  - ${t.text}${t.date?' ('+fmtHuman(t.date)+')':''}\n`; });
+  }
+  if(text) out += `\nРефлексия:\n${text}\n`;
+  return out;
+}
+function downloadTextFile(filename, text){
+  const blob = new Blob([text], { type:'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+function openPhotoLightbox(src){
+  openModal(`<img src="${src}" style="width:100%; border-radius:12px; display:block;">`, ()=>{});
+}
+function renderRetro(){
+  const mode = retroMode;
+  const cursor = mode==='week' ? retroWeekCursor : retroMonthCursor;
+  const { start, end } = periodRange(mode, cursor);
+  const existing = findRetro(mode, cursor);
+  const taskStats = tasksStatsForRange(start, end);
+  const habitStats = habitsStatsForRange(start, end);
+  const sportStats = sportStatsForRange(start, end);
+  const prevKey = prevPeriodKey(mode, cursor);
+  const prevRange = periodRange(mode, prevKey);
+  const prevSportStats = sportStatsForRange(prevRange.start, prevRange.end);
+  const journalStats = journalStatsForRange(start, end);
+  const incomplete = incompleteTasksForRange(start, end);
+  const trend = retroTrendData(mode, cursor, 6);
+  const nextKey = nextPeriodKey(mode, cursor);
+  const nextGoals = mode==='week'
+    ? state.goalsWeekly.filter(g=>g.weekStart===nextKey)
+    : state.goalsMonthly.filter(g=>g.month===nextKey);
+  const historyList = state.retros.filter(r=>r.periodType===mode && r.periodKey!==cursor).sort((a,b)=> b.periodKey.localeCompare(a.periodKey));
+
+  const html = `
+    <div class="inbox-tabs" style="margin-top:6px;">
+      <button class="pill ${mode==='week'?'active work':''}" data-retromode="week">Неделя</button>
+      <button class="pill ${mode==='month'?'active work':''}" data-retromode="month">Месяц</button>
+    </div>
+    <div class="cal-header">
+      <button class="cal-nav" id="retroPrev">${icon('chevLeft')}</button>
+      <h2>${retroPeriodLabel(mode, cursor)}</h2>
+      <button class="cal-nav" id="retroNext">${icon('chevRight')}</button>
+    </div>
+
+    <div class="section-title" style="margin-top:14px;"><h2>Главное событие</h2></div>
+    <div class="field" style="margin-bottom:4px;">
+      <input type="text" id="retroHighlight" value="${escapeHtml(existing?existing.highlight||'':'')}" placeholder="Одна строка о том, что запомнилось больше всего">
+    </div>
+
+    <div class="section-title"><h2>Тренд</h2></div>
+    <div class="card">
+      ${trendChartHTML(trend, 'taskPct', 'hasTaskData', getListColor('work'), 'Задачи, % выполнения по периодам', '%')}
+      ${trendChartHTML(trend, 'habitPct', 'hasHabitData', 'var(--habit)', 'Привычки, средний % по периодам', '%')}
+      ${trendChartHTML(trend, 'sportReps', 'hasSportData', 'var(--sport)', 'Спорт, повторений по периодам', '')}
+    </div>
+
+    <div class="section-title"><h2>Задачи</h2></div>
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px;">
+        <span style="font-weight:800; font-size:22px; font-family:'Manrope';">${taskStats.done}/${taskStats.total}</span>
+        <span class="hint" style="margin:0;">выполнено всего</span>
+      </div>
+      ${[['Работа',taskStats.work,getListColor('work')],['Дом',taskStats.home,getListColor('home')],['Другое',taskStats.other,state.otherColor]].map(([label,d,color]) => `
+        <div style="margin-bottom:8px;">
+          <div style="display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:3px;">
+            <span><span class="accent-dot" style="background:${color}"></span>${label}</span>
+            <span style="color:var(--text-faint)">${d.done}/${d.total}</span>
+          </div>
+          <div style="height:6px; border-radius:4px; background:var(--surface2); overflow:hidden;">
+            <div style="height:100%; width:${d.pct}%; background:${color};"></div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+
+    ${incomplete.length ? `
+      <div class="section-title"><h2>Незакрытое</h2><span class="count">${incomplete.length}</span></div>
+      <p class="hint" style="margin-top:-6px; margin-bottom:8px;">Задачи, которые переносятся изо дня в день 3 и более раз</p>
+      <div class="card" style="padding:6px 14px;">
+        ${incomplete.map(t => `
+          <div class="minirow" data-incompopen="${t.id}" style="cursor:pointer;">
+            <div>
+              <div class="l" style="font-weight:600; font-size:13px;"><span class="accent-dot" style="background:${getListColor(t.list)}"></span>${escapeHtml(t.text)}</div>
+              <div class="r">перенесена ${t.carryCount} ${t.carryCount<5?'раза':'раз'} · сейчас на ${t.date?fmtHuman(t.date):''}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    ` : ''}
+
+    <div class="section-title"><h2>Привычки</h2></div>
+    <div class="card">
+      ${habitStats.results.length ? `
+        <div style="font-size:22px; font-weight:800; font-family:'Manrope'; margin-bottom:10px;">${habitStats.avgPct}% <span class="hint" style="margin:0;">средняя выполненность</span></div>
+        ${habitStats.results.map(r => `
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px dashed var(--border);">
+            <span style="font-size:13px;"><span class="accent-dot" style="background:${r.habit.color}"></span>${escapeHtml(r.habit.name)}</span>
+            <span style="font-size:12px; color:var(--text-faint);">${r.done}/${r.elapsed} · ${r.pct}%</span>
+          </div>
+        `).join('')}
+      ` : `<div class="empty">Нет данных за этот период</div>`}
+    </div>
+
+    <div class="section-title"><h2>Спорт</h2></div>
+    <div class="card">
+      <div class="row-gap" style="justify-content:space-around; text-align:center; margin-bottom:10px;">
+        <div><div style="font-size:20px; font-weight:800; font-family:'Manrope'; color:var(--sport);">${sportStats.totalReps}</div><div class="hint" style="margin:0;">повторений</div></div>
+        <div><div style="font-size:20px; font-weight:800; font-family:'Manrope'; color:var(--goal);">${sportStats.workoutsCount}</div><div class="hint" style="margin:0;">тренировок</div></div>
+        <div><div style="font-size:20px; font-weight:800; font-family:'Manrope'; color:var(--journal);">${sportStats.measurementsCount}</div><div class="hint" style="margin:0;">замеров</div></div>
+      </div>
+      ${(()=>{
+        const diffReps = sportStats.totalReps - prevSportStats.totalReps;
+        const dir = diffReps>0?'up':diffReps<0?'down':'flat';
+        const meta = { up:{arrow:'↑',color:'var(--habit)',word:'больше'}, down:{arrow:'↓',color:'var(--danger)',word:'меньше'}, flat:{arrow:'→',color:'var(--text-faint)',word:'столько же'} };
+        const m = meta[dir];
+        return prevSportStats.totalReps || sportStats.totalReps
+          ? `<div class="hint" style="color:${m.color}; font-weight:700; margin-bottom:8px;">${m.arrow} ${Math.abs(diffReps)} повторений ${m.word}, чем в прошлый период (было ${prevSportStats.totalReps})</div>`
+          : '';
+      })()}
+      ${sportStats.bestSet ? `<div class="hint" style="margin-bottom:2px;">🏆 Лучший подход: <b style="color:var(--text);">${escapeHtml(sportStats.bestSet.exerciseName)} — ${sportStats.bestSet.reps} раз</b> (${fmtHuman(sportStats.bestSet.date)})</div>` : ''}
+      ${sportStats.bestDay ? `<div class="hint">🔥 Лучший день: <b style="color:var(--text);">${sportStats.bestDay.total} повторений</b> (${fmtHuman(sportStats.bestDay.date)})</div>` : ''}
+    </div>
+
+    <div class="section-title"><h2>Дневник</h2></div>
+    <div class="card">
+      ${journalStats.avg!==null ? `
+        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:2px;">
+          <span style="font-size:22px; font-weight:800; font-family:'Manrope'; color:var(--journal);">${journalStats.avg.toFixed(1)}★</span>
+          <span class="hint" style="margin:0;">средняя оценка · ${journalStats.entries.length} записей</span>
+        </div>
+        ${journalTrendHTML(journalStats.entries)}
+        ${photoGalleryHTML(journalStats.photos)}
+      ` : `<div class="empty">Записей дневника за этот период нет</div>`}
+    </div>
+
+    <div class="section-title"><h2>Цели на следующий период</h2></div>
+    <div class="quickadd"><input type="text" id="retroNextGoal" placeholder="Цель на ${mode==='week'?'следующую неделю':'следующий месяц'}"><button id="retroNextGoalAdd">${icon('plus')}</button></div>
+    <div id="retroNextGoalsList" style="margin-bottom:8px;"></div>
+
+    <div class="section-title"><h2>Рефлексия</h2></div>
+    <div class="card">
+      <textarea class="journal-ta" id="retroTa" placeholder="Что было важным? Что получилось, что нет? Что взять в следующий период?" style="min-height:120px;">${existing?escapeHtml(existing.text):''}</textarea>
+      <div class="row-gap" style="margin-top:10px;">
+        <button class="btn btn-primary" id="retroSave" style="background:var(--goal); color:#fff; flex:1;">Сохранить</button>
+        <button class="btn" id="retroExport" style="display:flex; align-items:center; justify-content:center;">${icon('download')}</button>
+      </div>
+    </div>
+
+    ${historyList.length ? `
+      <div class="section-title"><h2>Прошлые ретро</h2></div>
+      <div class="card" style="padding:6px 14px;">
+        ${historyList.map(r => `
+          <div class="minirow" data-retrojump="${r.periodKey}" style="cursor:pointer;">
+            <div>
+              <div class="l">${retroPeriodLabel(r.periodType, r.periodKey)}</div>
+              <div class="r">${r.highlight ? '★ '+escapeHtml(r.highlight) : (r.text ? escapeHtml(r.text.slice(0,70)) + (r.text.length>70?'…':'') : 'без текста')}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    ` : ''}
+  `;
+  $('#tab-retro').innerHTML = html;
+
+  $$('[data-retromode]').forEach(b => b.addEventListener('click', ()=>{ retroMode = b.dataset.retromode; renderRetro(); }));
+  $('#retroPrev').addEventListener('click', ()=>{ if(mode==='week') retroWeekCursor=prevPeriodKey('week',retroWeekCursor); else retroMonthCursor=prevPeriodKey('month',retroMonthCursor); renderRetro(); });
+  $('#retroNext').addEventListener('click', ()=>{ if(mode==='week') retroWeekCursor=nextPeriodKey('week',retroWeekCursor); else retroMonthCursor=nextPeriodKey('month',retroMonthCursor); renderRetro(); });
+
+  $$('[data-photolightbox]').forEach(img => img.addEventListener('click', ()=> openPhotoLightbox(img.dataset.photolightbox)));
+  $$('[data-incompopen]').forEach(el => el.addEventListener('click', ()=>{
+    const tsk = state.tasks.find(x=>x.id===el.dataset.incompopen); openTaskModal({ task: tsk });
+  }));
+
+  const ngListEl = $('#retroNextGoalsList');
+  function drawNextGoals(){
+    const list = mode==='week' ? state.goalsWeekly.filter(g=>g.weekStart===nextKey) : state.goalsMonthly.filter(g=>g.month===nextKey);
+    ngListEl.innerHTML = list.length ? list.map(g => `
+      <div class="goalrow">
+        <button class="checkbox ${g.done?'done':''}" style="${g.done?'background:var(--goal);border-color:var(--goal)':''}" data-nggoaltoggle="${g.id}">${icon('check')}</button>
+        <span class="gtext ${g.done?'done':''}">${escapeHtml(g.text)}</span>
+        <button class="delbtn" data-nggoaldel="${g.id}">${icon('x')}</button>
+      </div>`).join('') : `<div class="empty">Пока пусто</div>`;
+    $$('[data-nggoaltoggle]', ngListEl).forEach(b => b.addEventListener('click', ()=>{
+      const arr = mode==='week' ? state.goalsWeekly : state.goalsMonthly;
+      const g = arr.find(x=>x.id===b.dataset.nggoaltoggle); g.done=!g.done; persistGoals(); drawNextGoals();
+    }));
+    $$('[data-nggoaldel]', ngListEl).forEach(b => b.addEventListener('click', ()=>{
+      if(mode==='week') state.goalsWeekly = state.goalsWeekly.filter(x=>x.id!==b.dataset.nggoaldel);
+      else state.goalsMonthly = state.goalsMonthly.filter(x=>x.id!==b.dataset.nggoaldel);
+      persistGoals(); drawNextGoals();
+    }));
+  }
+  drawNextGoals();
+  $('#retroNextGoalAdd').addEventListener('click', ()=>{
+    const inp = $('#retroNextGoal'); if(!inp.value.trim()) return;
+    if(mode==='week') state.goalsWeekly.push({ id:uid(), weekStart:nextKey, text:inp.value.trim(), linkedGoalId:null, done:false });
+    else state.goalsMonthly.push({ id:uid(), month:nextKey, text:inp.value.trim(), done:false });
+    inp.value=''; persistGoals(); drawNextGoals();
+  });
+  $('#retroNextGoal').addEventListener('keydown', e=>{ if(e.key==='Enter') $('#retroNextGoalAdd').click(); });
+
+  $('#retroSave').addEventListener('click', ()=>{
+    const text = $('#retroTa').value.trim();
+    const highlight = $('#retroHighlight').value.trim();
+    const r = findRetro(mode, cursor);
+    if(r){ r.text = text; r.highlight = highlight; }
+    else state.retros.push({ id:uid(), periodType:mode, periodKey:cursor, text, highlight, createdAt:Date.now() });
+    persistRetro();
+    const btn = $('#retroSave'); const orig = btn.textContent;
+    btn.textContent = 'Сохранено ✓'; btn.style.opacity='0.8';
+    setTimeout(()=>{ const b=$('#retroSave'); if(b){ b.textContent=orig; b.style.opacity='1'; } }, 1400);
+  });
+  $('#retroExport').addEventListener('click', ()=>{
+    const text = $('#retroTa').value.trim();
+    const highlight = $('#retroHighlight').value.trim();
+    const out = exportRetroText(mode, cursor, taskStats, habitStats, sportStats, journalStats, highlight, text, incomplete);
+    downloadTextFile(`retro-${mode}-${cursor}.txt`, out);
+  });
+  $$('[data-retrojump]').forEach(el => el.addEventListener('click', ()=>{
+    if(mode==='week') retroWeekCursor = el.dataset.retrojump; else retroMonthCursor = el.dataset.retrojump;
+    renderRetro();
+  }));
+}
+
+/* ============================= GOALS TAB ============================= */
+function goalsTrendData(mode, cursorNow, n=6){
+  const points = [];
+  let c = cursorNow;
+  for(let i=0;i<n;i++){
+    const arr = mode==='month' ? state.goalsMonthly.filter(g=>g.month===c) : state.goalsWeekly.filter(g=>g.weekStart===c);
+    points.unshift({ pct: arr.length?Math.round(arr.filter(g=>g.done).length/arr.length*100):0, has: arr.length>0 });
+    c = mode==='month' ? shiftMonth(c,-1) : (()=>{ const d=parseISO(c); d.setDate(d.getDate()-7); return isoDate(d); })();
+  }
+  return points;
+}
 function renderGoals(){
   const monthGoals = state.goalsMonthly.filter(g=>g.month===goalsMonthCursor);
   const weekGoals = state.goalsWeekly.filter(g=>g.weekStart===goalsWeekCursor);
   const [y,m] = goalsMonthCursor.split('-').map(Number);
+  const mDone = monthGoals.filter(g=>g.done).length, mPct = monthGoals.length?Math.round(mDone/monthGoals.length*100):0;
+  const wDone = weekGoals.filter(g=>g.done).length, wPct = weekGoals.length?Math.round(wDone/weekGoals.length*100):0;
+  const mTrend = goalsTrendData('month', goalsMonthCursor);
+  const wTrend = goalsTrendData('week', goalsWeekCursor);
 
   const html = `
     <div class="goals-grid">
@@ -1903,6 +2915,18 @@ function renderGoals(){
           <h2>${MONTHS_NOM[m-1]} ${y}</h2>
           <button class="cal-nav" id="gmNext">${icon('chevRight')}</button>
         </div>
+        ${monthGoals.length ? `
+          <div class="card" style="padding:12px 14px;">
+            <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;">
+              <span style="font-size:20px; font-weight:800; font-family:'Manrope'; color:var(--goal);">${mPct}%</span>
+              <span class="hint" style="margin:0;">${mDone} из ${monthGoals.length} выполнено</span>
+            </div>
+            <div style="height:7px; border-radius:4px; background:var(--surface2); overflow:hidden; margin-bottom:10px;">
+              <div style="height:100%; width:${mPct}%; background:var(--goal);"></div>
+            </div>
+            ${trendChartHTML(mTrend, 'pct', 'has', 'var(--goal)', 'Тренд по месяцам', '%')}
+          </div>
+        ` : ''}
         <div class="quickadd"><input type="text" id="gmInput" placeholder="Цель на месяц"><button id="gmAdd">${icon('plus')}</button></div>
         <div id="gmList" style="margin-bottom:8px"></div>
       </div>
@@ -1913,6 +2937,18 @@ function renderGoals(){
           <h2>${weekLabel(goalsWeekCursor)}</h2>
           <button class="cal-nav" id="gwNext">${icon('chevRight')}</button>
         </div>
+        ${weekGoals.length ? `
+          <div class="card" style="padding:12px 14px;">
+            <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;">
+              <span style="font-size:20px; font-weight:800; font-family:'Manrope'; color:var(--goal);">${wPct}%</span>
+              <span class="hint" style="margin:0;">${wDone} из ${weekGoals.length} выполнено</span>
+            </div>
+            <div style="height:7px; border-radius:4px; background:var(--surface2); overflow:hidden; margin-bottom:10px;">
+              <div style="height:100%; width:${wPct}%; background:var(--goal);"></div>
+            </div>
+            ${trendChartHTML(wTrend, 'pct', 'has', 'var(--goal)', 'Тренд по неделям', '%')}
+          </div>
+        ` : ''}
         <div class="quickadd"><input type="text" id="gwInput" placeholder="Цель на неделю"></div>
         <div class="field" style="margin-bottom:8px">
           <select id="gwLink">
